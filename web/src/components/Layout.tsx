@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useI18n } from '../lib/i18n.js';
+import { useTheme } from '../lib/theme.js';
 
 /** App shell: branded sidebar + routed content area. */
 
@@ -39,7 +40,10 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                     ))}
                 </nav>
                 <div className="mt-auto flex flex-col gap-3 px-3 pb-3 md:pb-0">
-                    <LanguageToggle />
+                    <div className="flex items-center gap-2">
+                        <ThemeToggle />
+                        <LanguageToggle />
+                    </div>
                     {authRequired && (
                         <button
                             onClick={() => void api.logout().then(() => window.location.reload())}
@@ -71,6 +75,32 @@ export function LanguageToggle() {
                     aria-pressed={lang === code}
                 >
                     {code}
+                </button>
+            ))}
+        </div>
+    );
+}
+
+export function ThemeToggle() {
+    const { theme, setTheme } = useTheme();
+    const options: { value: 'light' | 'dark'; glyph: string; label: string }[] = [
+        { value: 'light', glyph: '☀', label: 'Light' },
+        { value: 'dark', glyph: '☾', label: 'Dark' },
+    ];
+    return (
+        <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1 text-xs font-medium">
+            {options.map((opt) => (
+                <button
+                    key={opt.value}
+                    onClick={() => setTheme(opt.value)}
+                    className={`rounded-md px-2.5 py-1 transition-colors ${
+                        theme === opt.value ? 'bg-accent text-white' : 'text-muted hover:text-ink'
+                    }`}
+                    title={opt.label}
+                    aria-label={opt.label}
+                    aria-pressed={theme === opt.value}
+                >
+                    {opt.glyph}
                 </button>
             ))}
         </div>

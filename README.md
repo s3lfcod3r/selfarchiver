@@ -32,6 +32,7 @@ Everything lives in **one container**: SQLite (with full-text search) and `.eml`
 | **Archive** | Browse + full-text search (subject, sender, recipients, body). Download any message as `.eml`. |
 | **Activity** | Run history with scanned / archived / deleted counts and errors. |
 | **Language** | UI in English & German, switchable in the sidebar (remembers your choice). |
+| **Theme** | Light & dark, switchable in the sidebar; first visit follows your OS preference. |
 | **Auth** | Optional single-password login for the whole UI. |
 
 ## How it works

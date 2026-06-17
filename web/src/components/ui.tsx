@@ -152,7 +152,7 @@ export function Modal({
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/40 p-4 backdrop-blur-sm sm:p-8"
+            className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:p-8"
             onMouseDown={onClose}
         >
             <Card className={`my-4 w-full ${wide ? 'max-w-2xl' : 'max-w-lg'}`}>

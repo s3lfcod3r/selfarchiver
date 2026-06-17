@@ -60,3 +60,32 @@ body::before {
     background: var(--color-accent);
     color: white;
 }
+
+/*
+ * Dark theme: override the design tokens so every Tailwind utility adapts.
+ * Keeps the SelfArchiver identity (warm charcoal paper, amber accent, teal),
+ * just brightened for legibility on dark.
+ */
+:root {
+    color-scheme: light;
+}
+
+html[data-theme='dark'] {
+    color-scheme: dark;
+    --color-paper: #16130f;
+    --color-surface: #1f1b15;
+    --color-ink: #f1eadf;
+    --color-muted: #a89c8a;
+    --color-line: #332c22;
+    --color-accent: #e57a36;
+    --color-accent-soft: #3a2616;
+    --color-teal: #2dd4bf;
+    --color-teal-soft: #14302c;
+    --color-danger: #f87171;
+    --color-danger-soft: #3a1c1c;
+}
+
+/* On dark, soften the paper grain so it doesn't read as noise. */
+html[data-theme='dark'] body::before {
+    opacity: 0.35;
+}
