@@ -40,13 +40,65 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
         });
     };
 
+    const [mobileOpen, setMobileOpen] = useState(false);
+
     // `collapsed` only narrows the sidebar on md+; on mobile the nav stays full.
     const hideWhenCollapsed = collapsed ? 'md:hidden' : '';
 
     return (
         <div className="flex min-h-full flex-col md:flex-row">
+            {/* Mobile top bar */}
+            <header className="flex items-center justify-between border-b border-line px-4 py-3 md:hidden">
+                <img src="/logo-wide.png" alt="SelfArchiver" className="h-8 w-auto" />
+                <button
+                    type="button"
+                    onClick={() => setMobileOpen((o) => !o)}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-line text-lg text-muted hover:text-ink"
+                    aria-label="Menu"
+                    aria-expanded={mobileOpen}
+                >
+                    {mobileOpen ? '✕' : '☰'}
+                </button>
+            </header>
+
+            {/* Mobile drawer */}
+            {mobileOpen && (
+                <div className="flex flex-col gap-1 border-b border-line px-3 py-3 md:hidden">
+                    {NAV.map((item) => (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            end={item.to === '/'}
+                            onClick={() => setMobileOpen(false)}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                                    isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-line/40 hover:text-ink'
+                                }`
+                            }
+                        >
+                            <span className="shrink-0">{item.icon}</span>
+                            {t(item.key)}
+                        </NavLink>
+                    ))}
+                    <div className="mt-2 flex items-center gap-2 px-1">
+                        <ThemeToggle />
+                        <LanguageToggle />
+                        <span className="ml-auto font-mono text-[10px] text-muted">SelfArchiver {APP_VERSION}</span>
+                    </div>
+                    {authRequired && (
+                        <button
+                            onClick={() => void api.logout().then(() => window.location.reload())}
+                            className="mt-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:bg-line/40 hover:text-ink"
+                        >
+                            <IconLogout /> {t('action.signOut')}
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {/* Desktop sidebar */}
             <aside
-                className={`flex shrink-0 flex-col border-line md:h-screen md:border-r md:py-6 ${
+                className={`hidden shrink-0 flex-col border-line md:flex md:h-screen md:border-r md:py-6 ${
                     collapsed ? 'md:w-[4.5rem]' : 'md:w-56'
                 }`}
             >
