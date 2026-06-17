@@ -55,7 +55,23 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
         const before = new Date(Date.now() - rule.minAge * unitMs);
 
         await withClient(conn, async (client) => {
-            for (const folder of rule.folders) {
+            // Optionally expand the selected folders with any (new) subfolders,
+            // discovered fresh on this run.
+            let folders = rule.folders;
+            if (rule.includeSubfolders) {
+                const all = (await client.list()).map((b) => b.path);
+                const selected = new Set(rule.folders);
+                for (const sel of rule.folders) {
+                    for (const path of all) {
+                        if (path !== sel && (path.startsWith(`${sel}.`) || path.startsWith(`${sel}/`))) {
+                            selected.add(path);
+                        }
+                    }
+                }
+                folders = [...selected];
+            }
+
+            for (const folder of folders) {
                 // First pass: collect light envelope summaries (lock released when done).
                 const summaries: EnvelopeSummary[] = [];
                 for await (const env of fetchEnvelopes(client, folder, before, rule.filter.seenOnly)) {

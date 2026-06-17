@@ -10,6 +10,7 @@ interface RuleRow {
     name: string;
     enabled: number;
     folders: string;
+    include_subfolders: number;
     filter: string;
     min_age_days: number;
     min_age_unit: string;
@@ -28,6 +29,7 @@ function rowToRule(r: RuleRow): Rule {
         name: r.name,
         enabled: r.enabled === 1,
         folders: JSON.parse(r.folders) as string[],
+        includeSubfolders: r.include_subfolders === 1,
         filter: ruleFilterSchema.parse(JSON.parse(r.filter)),
         minAge: r.min_age_days,
         minAgeUnit: r.min_age_unit as Rule['minAgeUnit'],
@@ -44,14 +46,15 @@ export function createRule(input: RuleInput): Rule {
     const id = randomUUID();
     const now = Date.now();
     db.prepare(
-        `INSERT INTO rules (id, source_id, name, enabled, folders, filter, min_age_days, min_age_unit, action, schedule_cron, created_at, updated_at)
-         VALUES (@id, @source_id, @name, @enabled, @folders, @filter, @min_age_days, @min_age_unit, @action, @schedule_cron, @now, @now)`,
+        `INSERT INTO rules (id, source_id, name, enabled, folders, include_subfolders, filter, min_age_days, min_age_unit, action, schedule_cron, created_at, updated_at)
+         VALUES (@id, @source_id, @name, @enabled, @folders, @include_subfolders, @filter, @min_age_days, @min_age_unit, @action, @schedule_cron, @now, @now)`,
     ).run({
         id,
         source_id: input.sourceId,
         name: input.name,
         enabled: input.enabled ? 1 : 0,
         folders: JSON.stringify(input.folders),
+        include_subfolders: input.includeSubfolders ? 1 : 0,
         filter: JSON.stringify(input.filter),
         min_age_days: input.minAge,
         min_age_unit: input.minAgeUnit,
@@ -66,14 +69,15 @@ export function updateRule(id: string, input: RuleInput): Rule | null {
     const existing = getRule(id);
     if (!existing) return null;
     db.prepare(
-        `UPDATE rules SET source_id=@source_id, name=@name, enabled=@enabled, folders=@folders, filter=@filter,
-         min_age_days=@min_age_days, min_age_unit=@min_age_unit, action=@action, schedule_cron=@schedule_cron, updated_at=@now WHERE id=@id`,
+        `UPDATE rules SET source_id=@source_id, name=@name, enabled=@enabled, folders=@folders, include_subfolders=@include_subfolders,
+         filter=@filter, min_age_days=@min_age_days, min_age_unit=@min_age_unit, action=@action, schedule_cron=@schedule_cron, updated_at=@now WHERE id=@id`,
     ).run({
         id,
         source_id: input.sourceId,
         name: input.name,
         enabled: input.enabled ? 1 : 0,
         folders: JSON.stringify(input.folders),
+        include_subfolders: input.includeSubfolders ? 1 : 0,
         filter: JSON.stringify(input.filter),
         min_age_days: input.minAge,
         min_age_unit: input.minAgeUnit,

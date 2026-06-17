@@ -17,6 +17,7 @@ function blankRule(sourceId: string): RuleInput {
         name: '',
         enabled: true,
         folders: [],
+        includeSubfolders: false,
         filter: defaultFilter(),
         minAge: 30,
         minAgeUnit: 'days',
@@ -62,14 +63,19 @@ export default function RuleForm({
         set('scheduleCron', cron);
     };
 
-    // Load the mailbox's folders whenever the selected source changes.
-    useEffect(() => {
-        if (!form.sourceId) return;
+    // (Re)load the mailbox's folders. Called when the source changes and via the
+    // refresh button, so newly created folders show up without reopening.
+    const loadFolders = (sourceId: string) => {
+        if (!sourceId) return;
         setFolders(null);
         setFolderError(null);
-        api.folders(form.sourceId)
+        api.folders(sourceId)
             .then((list) => setFolders(list.filter((f) => f.selectable)))
             .catch((err) => setFolderError(err instanceof Error ? err.message : 'Could not list folders'));
+    };
+    useEffect(() => {
+        loadFolders(form.sourceId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [form.sourceId]);
 
     // Validate the cron expression (and compute the next run) as it changes.
@@ -146,7 +152,17 @@ export default function RuleForm({
 
                 {/* Folder selection */}
                 <div>
-                    <div className="mb-1.5 text-sm font-medium text-ink">{t('rf.foldersTitle')}</div>
+                    <div className="mb-1.5 flex items-center justify-between">
+                        <span className="text-sm font-medium text-ink">{t('rf.foldersTitle')}</span>
+                        <button
+                            type="button"
+                            onClick={() => loadFolders(form.sourceId)}
+                            className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+                            title={t('rf.refreshFolders')}
+                        >
+                            ↻ {t('rf.refreshFolders')}
+                        </button>
+                    </div>
                     {folderError ? (
                         <p className="text-sm text-danger">{folderError}</p>
                     ) : !folders ? (
@@ -170,6 +186,14 @@ export default function RuleForm({
                         </div>
                     )}
                     <p className="mt-1 text-xs text-muted">{t('rf.foldersHint')}</p>
+                    <div className="mt-2">
+                        <Toggle
+                            checked={form.includeSubfolders}
+                            onChange={(v) => set('includeSubfolders', v)}
+                            label={t('rf.includeSubfolders')}
+                        />
+                        <p className="mt-1 text-xs text-muted">{t('rf.includeSubfoldersHint')}</p>
+                    </div>
                 </div>
 
                 {/* Filter */}
@@ -324,6 +348,7 @@ function toInput(rule: Rule): RuleInput {
         name: rule.name,
         enabled: rule.enabled,
         folders: rule.folders,
+        includeSubfolders: rule.includeSubfolders,
         filter: rule.filter,
         minAge: rule.minAge,
         minAgeUnit: rule.minAgeUnit,

@@ -33,6 +33,7 @@ export interface Rule {
     name: string;
     enabled: boolean;
     folders: string[];
+    includeSubfolders: boolean;
     filter: RuleFilter;
     minAge: number;
     minAgeUnit: AgeUnit;
@@ -49,6 +50,7 @@ export interface RuleInput {
     name: string;
     enabled: boolean;
     folders: string[];
+    includeSubfolders: boolean;
     filter: RuleFilter;
     minAge: number;
     minAgeUnit: AgeUnit;

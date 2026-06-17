@@ -1,10 +1,12 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useI18n } from '../lib/i18n.js';
 import { useTheme } from '../lib/theme.js';
 
-/** App shell: branded sidebar + routed content area. */
+/** App shell: branded, collapsible sidebar + routed content area. */
+
+const APP_VERSION = 'v0.1.0';
 
 const NAV: { to: string; key: string; icon: ReactNode }[] = [
     { to: '/', key: 'nav.overview', icon: <IconGrid /> },
@@ -14,42 +16,88 @@ const NAV: { to: string; key: string; icon: ReactNode }[] = [
     { to: '/runs', key: 'nav.activity', icon: <IconClock /> },
 ];
 
+function readCollapsed(): boolean {
+    try {
+        return localStorage.getItem('sa_sidebar') === '1';
+    } catch {
+        return false;
+    }
+}
+
 export default function Layout({ authRequired }: { authRequired: boolean }) {
     const { t } = useI18n();
+    const [collapsed, setCollapsed] = useState<boolean>(readCollapsed);
+
+    const toggleCollapsed = () => {
+        setCollapsed((c) => {
+            const next = !c;
+            try {
+                localStorage.setItem('sa_sidebar', next ? '1' : '0');
+            } catch {
+                // ignore
+            }
+            return next;
+        });
+    };
+
+    // `collapsed` only narrows the sidebar on md+; on mobile the nav stays full.
+    const hideWhenCollapsed = collapsed ? 'md:hidden' : '';
+
     return (
         <div className="mx-auto flex min-h-full max-w-[1400px] flex-col md:flex-row">
-            <aside className="flex shrink-0 flex-col border-line md:h-screen md:w-64 md:border-r md:py-6">
-                <div className="px-5 py-4 md:py-2">
-                    <img src="/logo-wide.png" alt="SelfArchiver" className="h-9 w-auto" />
+            <aside
+                className={`flex shrink-0 flex-col border-line md:h-screen md:border-r md:py-6 ${
+                    collapsed ? 'md:w-[4.5rem]' : 'md:w-64'
+                }`}
+            >
+                <div className="flex items-center justify-between gap-2 px-5 py-4 md:px-3 md:py-2">
+                    <img src="/logo-wide.png" alt="SelfArchiver" className={`h-9 w-auto ${hideWhenCollapsed}`} />
+                    {collapsed && <img src="/icon.png" alt="SelfArchiver" className="hidden h-8 w-8 md:block" />}
+                    <button
+                        type="button"
+                        onClick={toggleCollapsed}
+                        className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-md border border-line text-muted hover:border-accent/50 hover:text-ink md:inline-flex"
+                        title={collapsed ? t('nav.expand') : t('nav.collapse')}
+                        aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
+                    >
+                        {collapsed ? '»' : '«'}
+                    </button>
                 </div>
+
                 <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:mt-6 md:flex-col md:overflow-visible md:pb-0">
                     {NAV.map((item) => (
                         <NavLink
                             key={item.to}
                             to={item.to}
                             end={item.to === '/'}
+                            title={t(item.key)}
                             className={({ isActive }) =>
                                 `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                    isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-line/40 hover:text-ink'
-                                }`
+                                    collapsed ? 'md:justify-center md:px-0' : ''
+                                } ${isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-line/40 hover:text-ink'}`
                             }
                         >
                             <span className="shrink-0">{item.icon}</span>
-                            {t(item.key)}
+                            <span className={hideWhenCollapsed}>{t(item.key)}</span>
                         </NavLink>
                     ))}
                 </nav>
+
                 <div className="mt-auto flex flex-col gap-3 px-3 pb-3 md:pb-0">
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 ${hideWhenCollapsed}`}>
                         <ThemeToggle />
                         <LanguageToggle />
                     </div>
+                    <div className={`px-1 font-mono text-[10px] text-muted ${hideWhenCollapsed}`}>SelfArchiver {APP_VERSION}</div>
                     {authRequired && (
                         <button
                             onClick={() => void api.logout().then(() => window.location.reload())}
-                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:bg-line/40 hover:text-ink"
+                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:bg-line/40 hover:text-ink ${
+                                collapsed ? 'md:justify-center md:px-0' : ''
+                            }`}
+                            title={t('action.signOut')}
                         >
-                            <IconLogout /> {t('action.signOut')}
+                            <IconLogout /> <span className={hideWhenCollapsed}>{t('action.signOut')}</span>
                         </button>
                     )}
                 </div>
@@ -57,26 +105,6 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
             <main className="flex-1 px-5 py-6 md:px-10 md:py-10">
                 <Outlet />
             </main>
-        </div>
-    );
-}
-
-export function LanguageToggle() {
-    const { lang, setLang } = useI18n();
-    return (
-        <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1 text-xs font-medium">
-            {(['en', 'de'] as const).map((code) => (
-                <button
-                    key={code}
-                    onClick={() => setLang(code)}
-                    className={`rounded-md px-2.5 py-1 uppercase transition-colors ${
-                        lang === code ? 'bg-accent text-white' : 'text-muted hover:text-ink'
-                    }`}
-                    aria-pressed={lang === code}
-                >
-                    {code}
-                </button>
-            ))}
         </div>
     );
 }
@@ -101,6 +129,26 @@ export function ThemeToggle() {
                     aria-pressed={theme === opt.value}
                 >
                     {opt.glyph}
+                </button>
+            ))}
+        </div>
+    );
+}
+
+export function LanguageToggle() {
+    const { lang, setLang } = useI18n();
+    return (
+        <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1 text-xs font-medium">
+            {(['en', 'de'] as const).map((code) => (
+                <button
+                    key={code}
+                    onClick={() => setLang(code)}
+                    className={`rounded-md px-2.5 py-1 uppercase transition-colors ${
+                        lang === code ? 'bg-accent text-white' : 'text-muted hover:text-ink'
+                    }`}
+                    aria-pressed={lang === code}
+                >
+                    {code}
                 </button>
             ))}
         </div>

@@ -38,6 +38,7 @@ export function initSchema(): void {
             name          TEXT NOT NULL,
             enabled       INTEGER NOT NULL DEFAULT 1,
             folders       TEXT NOT NULL DEFAULT '[]',
+            include_subfolders INTEGER NOT NULL DEFAULT 0,
             filter        TEXT NOT NULL DEFAULT '{}',
             min_age_days  INTEGER NOT NULL DEFAULT 30,
             min_age_unit  TEXT NOT NULL DEFAULT 'days',
@@ -100,6 +101,7 @@ export function initSchema(): void {
     // Lightweight migrations for databases created before a column existed.
     ensureColumn('sources', 'allow_self_signed', 'INTEGER NOT NULL DEFAULT 0');
     ensureColumn('rules', 'min_age_unit', "TEXT NOT NULL DEFAULT 'days'");
+    ensureColumn('rules', 'include_subfolders', 'INTEGER NOT NULL DEFAULT 0');
 }
 
 /** Add a column to an existing table if it is not already present. */

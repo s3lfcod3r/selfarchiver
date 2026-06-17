@@ -66,6 +66,9 @@ export const ruleInputSchema = z.object({
     name: z.string().min(1).max(120),
     enabled: z.boolean().default(true),
     folders: z.array(z.string().min(1)).min(1, 'Select at least one folder'),
+    // Also archive any (new) subfolders below the selected folders, discovered
+    // fresh on every run.
+    includeSubfolders: z.boolean().default(false),
     filter: ruleFilterSchema.default(ruleFilterSchema.parse({})),
     minAge: z.number().int().min(0).max(100000).default(30),
     minAgeUnit: ageUnitSchema.default('days'),
@@ -80,6 +83,7 @@ export interface Rule {
     name: string;
     enabled: boolean;
     folders: string[];
+    includeSubfolders: boolean;
     filter: RuleFilter;
     minAge: number;
     minAgeUnit: AgeUnit;

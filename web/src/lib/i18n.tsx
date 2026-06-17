@@ -24,6 +24,8 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'nav.activity': 'Activity',
         'app.tagline': 'mailbox keeper',
         'action.signOut': 'Sign out',
+        'nav.collapse': 'Collapse',
+        'nav.expand': 'Expand',
         'lang.language': 'Language',
 
         'login.subtitle': 'sign in to continue',
@@ -103,6 +105,10 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'rf.foldersTitle': 'Folders to archive',
         'rf.loadingFolders': 'Loading folders…',
         'rf.foldersHint': 'Only the folders you tick are touched — the rest of the mailbox (incl. spam) is left alone.',
+        'rf.refreshFolders': 'Refresh',
+        'rf.includeSubfolders': 'Also include (new) subfolders',
+        'rf.includeSubfoldersHint':
+            'On every run, subfolders below the selected folders are discovered and archived too.',
         'rf.filterLegend': 'Filter (all conditions must match)',
         'rf.fromContains': 'From contains any of',
         'rf.fromPh': 'e.g. rechnung@, @amazon.de — press Enter',
@@ -199,6 +205,8 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'nav.activity': 'Aktivität',
         'app.tagline': 'Postfach-Hüter',
         'action.signOut': 'Abmelden',
+        'nav.collapse': 'Einklappen',
+        'nav.expand': 'Ausklappen',
         'lang.language': 'Sprache',
 
         'login.subtitle': 'zum Fortfahren anmelden',
@@ -279,6 +287,10 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'rf.loadingFolders': 'Ordner werden geladen…',
         'rf.foldersHint':
             'Nur angehakte Ordner werden bearbeitet — der Rest des Postfachs (inkl. Spam) bleibt unberührt.',
+        'rf.refreshFolders': 'Aktualisieren',
+        'rf.includeSubfolders': 'Auch (neue) Unterordner einbeziehen',
+        'rf.includeSubfoldersHint':
+            'Bei jedem Lauf werden Unterordner der gewählten Ordner erkannt und mitarchiviert.',
         'rf.filterLegend': 'Filter (alle Bedingungen müssen zutreffen)',
         'rf.fromContains': 'Absender enthält eines von',
         'rf.fromPh': 'z. B. rechnung@, @amazon.de — Enter drücken',
