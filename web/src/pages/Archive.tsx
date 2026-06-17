@@ -199,10 +199,24 @@ function EmailViewer({ email, onClose }: { email: ArchivedEmail; onClose: () => 
                     <div>
                         {email.folder} · {formatDate(email.sentAt)} · {formatBytes(email.size)}
                     </div>
-                    {email.attachmentNames.length > 0 && (
-                        <div className="mt-1">📎 {email.attachmentNames.join(', ')}</div>
-                    )}
+                    {email.attachmentNames.length > 0 && <div className="mt-1">📎 {email.attachmentNames.length}</div>}
                 </div>
+
+                {content && content.attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                        {content.attachments.map((a) => (
+                            <a
+                                key={a.index}
+                                href={api.attachmentUrl(email.id, a.index)}
+                                download
+                                className="inline-flex items-center gap-1.5 rounded-md border border-line bg-paper/40 px-2.5 py-1.5 text-xs text-accent hover:border-accent/50"
+                            >
+                                📎 {a.filename}
+                                {a.size ? <span className="text-muted">· {formatBytes(a.size)}</span> : null}
+                            </a>
+                        ))}
+                    </div>
+                )}
 
                 {error ? (
                     <p className="text-sm text-danger">{error}</p>

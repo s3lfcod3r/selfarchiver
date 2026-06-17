@@ -202,9 +202,10 @@ export const api = {
             date: number | null;
             text: string | null;
             html: string | null;
-            attachments: string[];
+            attachments: { index: number; filename: string; size: number | null; contentType: string | null }[];
         }>(`/emails/${id}/content`),
     downloadUrl: (id: string) => `/api/emails/${id}/download`,
+    attachmentUrl: (id: string, index: number) => `/api/emails/${id}/attachment/${index}`,
 
     listRuns: (ruleId?: string) =>
         request<{ runs: Run[] }>(`/runs${ruleId ? `?ruleId=${ruleId}` : ''}`).then((r) => r.runs),
