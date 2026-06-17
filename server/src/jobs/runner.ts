@@ -18,6 +18,7 @@ import type { Rule, Run, RunTrigger } from '../types.js';
  * mailbox can shrink safely without risking data loss.
  */
 
+const HOUR_MS = 3600000;
 const DAY_MS = 86400000;
 
 /** Rules currently executing, to prevent overlapping runs of the same rule. */
@@ -50,7 +51,8 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
             user: source.username,
             pass: decryptSecret(passwordEnc),
         };
-        const before = new Date(Date.now() - rule.minAgeDays * DAY_MS);
+        const unitMs = rule.minAgeUnit === 'hours' ? HOUR_MS : DAY_MS;
+        const before = new Date(Date.now() - rule.minAge * unitMs);
 
         await withClient(conn, async (client) => {
             for (const folder of rule.folders) {

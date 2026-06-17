@@ -117,51 +117,64 @@ export interface EmailQuery {
     sourceId?: string;
     folder?: string;
     search?: string;
+    /** Inclusive sent-date range, epoch ms. */
+    sentFrom?: number;
+    sentTo?: number;
     limit: number;
     offset: number;
 }
 
 export function queryEmails(q: EmailQuery): { items: ArchivedEmail[]; total: number } {
-    if (q.search && q.search.trim()) {
-        // All-named parameters (better-sqlite3 disallows mixing ? and @name, and
-        // rejects object keys a statement doesn't use — so count gets its own set).
-        const sourceClause = q.sourceId ? 'AND e.source_id = @sourceId' : '';
-        const base: Record<string, unknown> = { match: ftsQuery(q.search) };
-        if (q.sourceId) base.sourceId = q.sourceId;
-        const rows = db
-            .prepare(
-                `SELECT e.* FROM emails_fts f JOIN archived_emails e ON e.rowid = f.rowid
-                 WHERE emails_fts MATCH @match ${sourceClause}
-                 ORDER BY rank LIMIT @limit OFFSET @offset`,
-            )
-            .all({ ...base, limit: q.limit, offset: q.offset }) as EmailRow[];
-        const total = (
-            db
-                .prepare(
-                    `SELECT COUNT(*) AS c FROM emails_fts f JOIN archived_emails e ON e.rowid = f.rowid
-                     WHERE emails_fts MATCH @match ${sourceClause}`,
-                )
-                .get(base) as { c: number }
-        ).c;
-        return { items: rows.map(rowToEmail), total };
-    }
-
-    const where: string[] = [];
-    const params: Record<string, unknown> = { limit: q.limit, offset: q.offset };
+    // Shared metadata conditions (alias `e`), used by both the plain and FTS paths.
+    const conds: string[] = [];
+    const filter: Record<string, unknown> = {};
     if (q.sourceId) {
-        where.push('source_id = @sourceId');
-        params.sourceId = q.sourceId;
+        conds.push('e.source_id = @sourceId');
+        filter.sourceId = q.sourceId;
     }
     if (q.folder) {
-        where.push('folder = @folder');
-        params.folder = q.folder;
+        conds.push('e.folder = @folder');
+        filter.folder = q.folder;
     }
-    const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
+    if (q.sentFrom) {
+        conds.push('e.sent_at >= @sentFrom');
+        filter.sentFrom = q.sentFrom;
+    }
+    if (q.sentTo) {
+        conds.push('e.sent_at <= @sentTo');
+        filter.sentTo = q.sentTo;
+    }
+
+    const hasSearch = Boolean(q.search && q.search.trim());
+    if (hasSearch) filter.match = ftsQuery(q.search!);
+
+    const whereParts = hasSearch ? ['emails_fts MATCH @match', ...conds] : conds;
+    const whereSql = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+    const fromSql = hasSearch
+        ? 'emails_fts f JOIN archived_emails e ON e.rowid = f.rowid'
+        : 'archived_emails e';
+    const orderSql = hasSearch ? 'ORDER BY rank' : 'ORDER BY e.sent_at DESC NULLS LAST, e.archived_at DESC';
+
     const rows = db
-        .prepare(`SELECT * FROM archived_emails ${whereSql} ORDER BY sent_at DESC NULLS LAST, archived_at DESC LIMIT @limit OFFSET @offset`)
-        .all(params) as EmailRow[];
-    const total = (db.prepare(`SELECT COUNT(*) AS c FROM archived_emails ${whereSql}`).get(params) as { c: number }).c;
-    return { items: rows.map(rowToEmail), total };
+        .prepare(`SELECT e.* FROM ${fromSql} ${whereSql} ${orderSql} LIMIT @limit OFFSET @offset`)
+        .all({ ...filter, limit: q.limit, offset: q.offset }) as EmailRow[];
+
+    // Count statement must not receive @limit/@offset (better-sqlite3 rejects
+    // object keys a statement doesn't use), and no params at all when unfiltered.
+    const countStmt = db.prepare(`SELECT COUNT(*) AS c FROM ${fromSql} ${whereSql}`);
+    const total = (Object.keys(filter).length ? countStmt.get(filter) : countStmt.get()) as { c: number };
+
+    return { items: rows.map(rowToEmail), total: total.c };
+}
+
+/** Distinct folders that have archived mail (optionally scoped to one source). */
+export function distinctFolders(sourceId?: string): string[] {
+    const rows = sourceId
+        ? (db.prepare('SELECT DISTINCT folder FROM archived_emails WHERE source_id = ? ORDER BY folder').all(sourceId) as {
+              folder: string;
+          }[])
+        : (db.prepare('SELECT DISTINCT folder FROM archived_emails ORDER BY folder').all() as { folder: string }[]);
+    return rows.map((r) => r.folder);
 }
 
 export function getEmail(id: string): ArchivedEmail | null {

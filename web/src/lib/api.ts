@@ -25,6 +25,7 @@ export interface RuleFilter {
 }
 
 export type RuleAction = 'archive' | 'archive_delete';
+export type AgeUnit = 'days' | 'hours';
 
 export interface Rule {
     id: string;
@@ -33,7 +34,8 @@ export interface Rule {
     enabled: boolean;
     folders: string[];
     filter: RuleFilter;
-    minAgeDays: number;
+    minAge: number;
+    minAgeUnit: AgeUnit;
     action: RuleAction;
     scheduleCron: string;
     lastRunAt: number | null;
@@ -48,7 +50,8 @@ export interface RuleInput {
     enabled: boolean;
     folders: string[];
     filter: RuleFilter;
-    minAgeDays: number;
+    minAge: number;
+    minAgeUnit: AgeUnit;
     action: RuleAction;
     scheduleCron: string;
 }
@@ -163,14 +166,27 @@ export const api = {
             body: JSON.stringify({ cron }),
         }),
 
-    listEmails: (params: { search?: string; sourceId?: string; limit?: number; offset?: number }) => {
+    listEmails: (params: {
+        search?: string;
+        sourceId?: string;
+        folder?: string;
+        from?: number;
+        to?: number;
+        limit?: number;
+        offset?: number;
+    }) => {
         const qs = new URLSearchParams();
         if (params.search) qs.set('search', params.search);
         if (params.sourceId) qs.set('sourceId', params.sourceId);
+        if (params.folder) qs.set('folder', params.folder);
+        if (params.from) qs.set('from', String(params.from));
+        if (params.to) qs.set('to', String(params.to));
         if (params.limit) qs.set('limit', String(params.limit));
         if (params.offset) qs.set('offset', String(params.offset));
         return request<{ items: ArchivedEmail[]; total: number; limit: number; offset: number }>(`/emails?${qs}`);
     },
+    archiveFolders: (sourceId?: string) =>
+        request<{ folders: string[] }>(`/emails/folders${sourceId ? `?sourceId=${sourceId}` : ''}`).then((r) => r.folders),
     downloadUrl: (id: string) => `/api/emails/${id}/download`,
 
     listRuns: (ruleId?: string) =>

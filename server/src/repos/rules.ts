@@ -12,6 +12,7 @@ interface RuleRow {
     folders: string;
     filter: string;
     min_age_days: number;
+    min_age_unit: string;
     action: string;
     schedule_cron: string;
     last_run_at: number | null;
@@ -28,7 +29,8 @@ function rowToRule(r: RuleRow): Rule {
         enabled: r.enabled === 1,
         folders: JSON.parse(r.folders) as string[],
         filter: ruleFilterSchema.parse(JSON.parse(r.filter)),
-        minAgeDays: r.min_age_days,
+        minAge: r.min_age_days,
+        minAgeUnit: r.min_age_unit as Rule['minAgeUnit'],
         action: r.action as Rule['action'],
         scheduleCron: r.schedule_cron,
         lastRunAt: r.last_run_at,
@@ -42,8 +44,8 @@ export function createRule(input: RuleInput): Rule {
     const id = randomUUID();
     const now = Date.now();
     db.prepare(
-        `INSERT INTO rules (id, source_id, name, enabled, folders, filter, min_age_days, action, schedule_cron, created_at, updated_at)
-         VALUES (@id, @source_id, @name, @enabled, @folders, @filter, @min_age_days, @action, @schedule_cron, @now, @now)`,
+        `INSERT INTO rules (id, source_id, name, enabled, folders, filter, min_age_days, min_age_unit, action, schedule_cron, created_at, updated_at)
+         VALUES (@id, @source_id, @name, @enabled, @folders, @filter, @min_age_days, @min_age_unit, @action, @schedule_cron, @now, @now)`,
     ).run({
         id,
         source_id: input.sourceId,
@@ -51,7 +53,8 @@ export function createRule(input: RuleInput): Rule {
         enabled: input.enabled ? 1 : 0,
         folders: JSON.stringify(input.folders),
         filter: JSON.stringify(input.filter),
-        min_age_days: input.minAgeDays,
+        min_age_days: input.minAge,
+        min_age_unit: input.minAgeUnit,
         action: input.action,
         schedule_cron: input.scheduleCron,
         now,
@@ -64,7 +67,7 @@ export function updateRule(id: string, input: RuleInput): Rule | null {
     if (!existing) return null;
     db.prepare(
         `UPDATE rules SET source_id=@source_id, name=@name, enabled=@enabled, folders=@folders, filter=@filter,
-         min_age_days=@min_age_days, action=@action, schedule_cron=@schedule_cron, updated_at=@now WHERE id=@id`,
+         min_age_days=@min_age_days, min_age_unit=@min_age_unit, action=@action, schedule_cron=@schedule_cron, updated_at=@now WHERE id=@id`,
     ).run({
         id,
         source_id: input.sourceId,
@@ -72,7 +75,8 @@ export function updateRule(id: string, input: RuleInput): Rule | null {
         enabled: input.enabled ? 1 : 0,
         folders: JSON.stringify(input.folders),
         filter: JSON.stringify(input.filter),
-        min_age_days: input.minAgeDays,
+        min_age_days: input.minAge,
+        min_age_unit: input.minAgeUnit,
         action: input.action,
         schedule_cron: input.scheduleCron,
         now: Date.now(),

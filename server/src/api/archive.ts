@@ -2,7 +2,7 @@ import { createReadStream } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { env } from '../env.js';
-import { getEmail, queryEmails } from '../repos/emails.js';
+import { distinctFolders, getEmail, queryEmails } from '../repos/emails.js';
 
 /** REST endpoints for browsing, searching and downloading archived emails. */
 
@@ -10,17 +10,32 @@ const MAX_LIMIT = 200;
 
 export function registerArchiveRoutes(app: FastifyInstance): void {
     app.get('/api/emails', async (req) => {
-        const q = req.query as { search?: string; sourceId?: string; folder?: string; limit?: string; offset?: string };
+        const q = req.query as {
+            search?: string;
+            sourceId?: string;
+            folder?: string;
+            from?: string;
+            to?: string;
+            limit?: string;
+            offset?: string;
+        };
         const limit = Math.min(Number(q.limit ?? 50) || 50, MAX_LIMIT);
         const offset = Math.max(Number(q.offset ?? 0) || 0, 0);
         const result = queryEmails({
             search: q.search,
             sourceId: q.sourceId,
             folder: q.folder,
+            sentFrom: q.from ? Number(q.from) || undefined : undefined,
+            sentTo: q.to ? Number(q.to) || undefined : undefined,
             limit,
             offset,
         });
         return { ...result, limit, offset };
+    });
+
+    app.get('/api/emails/folders', async (req) => {
+        const { sourceId } = req.query as { sourceId?: string };
+        return { folders: distinctFolders(sourceId) };
     });
 
     app.get('/api/emails/:id', async (req, reply) => {

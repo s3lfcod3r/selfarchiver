@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Badge, Button, Field, Input, Modal, Select, Spinner, TagInput, Toggle } from '../components/ui.js';
 import { api, defaultFilter, type MailboxFolder, type Rule, type RuleInput, type Source } from '../lib/api.js';
 import { formatDate } from '../lib/format.js';
-import { CRON_PRESETS, useI18n } from '../lib/i18n.js';
+import { useI18n } from '../lib/i18n.js';
+import { buildCron, parseCron, WEEKDAY_ORDER, type Frequency, type SchedulePlan } from '../lib/schedule.js';
 
 /**
- * The full rule editor. This is where the four headline features live:
- * folder selection, the filter, the per-rule schedule and the
+ * The full rule editor. Headline features: folder selection, the filter, the
+ * age threshold (days or hours), the schedule builder and the
  * archive-then-delete retention action.
  */
 
@@ -17,10 +18,15 @@ function blankRule(sourceId: string): RuleInput {
         enabled: true,
         folders: [],
         filter: defaultFilter(),
-        minAgeDays: 30,
+        minAge: 30,
+        minAgeUnit: 'days',
         action: 'archive',
         scheduleCron: '0 3 * * *',
     };
+}
+
+function pad2(n: number): string {
+    return String(n).padStart(2, '0');
 }
 
 export default function RuleForm({
@@ -36,17 +42,25 @@ export default function RuleForm({
 }) {
     const { t } = useI18n();
     const [form, setForm] = useState<RuleInput>(rule ? toInput(rule) : blankRule(sources[0]?.id ?? ''));
+    const [plan, setPlanState] = useState<SchedulePlan>(parseCron(rule ? rule.scheduleCron : '0 3 * * *'));
     const [folders, setFolders] = useState<MailboxFolder[] | null>(null);
     const [folderError, setFolderError] = useState<string | null>(null);
     const [cronInfo, setCronInfo] = useState<{ valid: boolean; nextRun: number | null }>({ valid: true, nextRun: null });
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const cronOptions = CRON_PRESETS.map((p) => ({ value: p.value, label: t(p.key) }));
-
     const set = <K extends keyof RuleInput>(key: K, value: RuleInput[K]) => setForm((f) => ({ ...f, [key]: value }));
     const setFilter = <K extends keyof RuleInput['filter']>(key: K, value: RuleInput['filter'][K]) =>
         setForm((f) => ({ ...f, filter: { ...f.filter, [key]: value } }));
+
+    // Update the schedule plan and keep form.scheduleCron in sync (the cron is
+    // what the backend stores and the scheduler uses).
+    const updatePlan = (patch: Partial<SchedulePlan>) => {
+        const next = { ...plan, ...patch };
+        const cron = next.frequency === 'custom' ? next.cron : buildCron(next);
+        setPlanState({ ...next, cron });
+        set('scheduleCron', cron);
+    };
 
     // Load the mailbox's folders whenever the selected source changes.
     useEffect(() => {
@@ -68,6 +82,18 @@ export default function RuleForm({
 
     const toggleFolder = (path: string) => {
         set('folders', form.folders.includes(path) ? form.folders.filter((p) => p !== path) : [...form.folders, path]);
+    };
+
+    const toggleWeekday = (day: number) => {
+        const has = plan.weekdays.includes(day);
+        const weekdays = has ? plan.weekdays.filter((d) => d !== day) : [...plan.weekdays, day];
+        updatePlan({ weekdays: weekdays.length ? weekdays : [day] });
+    };
+
+    const timeValue = `${pad2(plan.hour)}:${pad2(plan.minute)}`;
+    const onTimeChange = (value: string) => {
+        const [h, m] = value.split(':').map(Number);
+        updatePlan({ hour: Number.isFinite(h) ? h : plan.hour, minute: Number.isFinite(m) ? m : plan.minute });
     };
 
     const save = async () => {
@@ -171,11 +197,18 @@ export default function RuleForm({
                             <Input
                                 type="number"
                                 min={0}
-                                value={form.minAgeDays}
-                                onChange={(e) => set('minAgeDays', Math.max(0, Number(e.target.value)))}
-                                className="w-28"
+                                value={form.minAge}
+                                onChange={(e) => set('minAge', Math.max(0, Number(e.target.value)))}
+                                className="w-24"
                             />
-                            <span className="text-sm text-muted">{t('rf.days')}</span>
+                            <Select
+                                value={form.minAgeUnit}
+                                onChange={(e) => set('minAgeUnit', e.target.value as RuleInput['minAgeUnit'])}
+                                className="w-32"
+                            >
+                                <option value="days">{t('rf.days')}</option>
+                                <option value="hours">{t('rf.hours')}</option>
+                            </Select>
                         </div>
                     </Field>
                     <Field label={t('rf.whatToDo')} hint={form.action === 'archive_delete' ? t('rf.deleteHint') : t('rf.keepHint')}>
@@ -186,28 +219,96 @@ export default function RuleForm({
                     </Field>
                 </div>
 
-                {/* Schedule */}
-                <Field label={t('rf.schedule')} hint={cronInfo.valid ? t('rf.nextRun', { time: formatDate(cronInfo.nextRun) }) : t('rf.invalidCron')}>
-                    <div className="flex flex-wrap gap-2">
-                        <Select
-                            value={cronOptions.some((o) => o.value === form.scheduleCron) ? form.scheduleCron : ''}
-                            onChange={(e) => e.target.value && set('scheduleCron', e.target.value)}
-                            className="max-w-[18rem]"
-                        >
-                            <option value="">{t('rf.custom')}</option>
-                            {cronOptions.map((o) => (
-                                <option key={o.value} value={o.value}>
-                                    {o.label}
-                                </option>
-                            ))}
-                        </Select>
-                        <Input
-                            value={form.scheduleCron}
-                            onChange={(e) => set('scheduleCron', e.target.value)}
-                            className={`max-w-[14rem] font-mono ${cronInfo.valid ? '' : 'border-danger'}`}
-                        />
+                {/* Schedule builder */}
+                <fieldset className="rounded-lg border border-line p-4">
+                    <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-muted">{t('rf.schedule')}</legend>
+                    <div className="flex flex-col gap-3">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <Field label={t('rf.frequency')}>
+                                <Select
+                                    value={plan.frequency}
+                                    onChange={(e) => updatePlan({ frequency: e.target.value as Frequency })}
+                                >
+                                    <option value="hourly">{t('rf.freqHourly')}</option>
+                                    <option value="daily">{t('rf.freqDaily')}</option>
+                                    <option value="weekly">{t('rf.freqWeekly')}</option>
+                                    <option value="monthly">{t('rf.freqMonthly')}</option>
+                                    <option value="custom">{t('rf.freqCustom')}</option>
+                                </Select>
+                            </Field>
+
+                            {plan.frequency === 'hourly' && (
+                                <Field label={t('rf.minute')}>
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        max={59}
+                                        value={plan.minute}
+                                        onChange={(e) => updatePlan({ minute: Math.max(0, Math.min(59, Number(e.target.value))) })}
+                                        className="w-24"
+                                    />
+                                </Field>
+                            )}
+
+                            {(plan.frequency === 'daily' || plan.frequency === 'weekly' || plan.frequency === 'monthly') && (
+                                <Field label={t('rf.time')}>
+                                    <Input type="time" value={timeValue} onChange={(e) => onTimeChange(e.target.value)} className="w-32" />
+                                </Field>
+                            )}
+
+                            {plan.frequency === 'monthly' && (
+                                <Field label={t('rf.dayOfMonth')}>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        max={28}
+                                        value={plan.dayOfMonth}
+                                        onChange={(e) => updatePlan({ dayOfMonth: Math.max(1, Math.min(28, Number(e.target.value))) })}
+                                        className="w-24"
+                                    />
+                                </Field>
+                            )}
+                        </div>
+
+                        {plan.frequency === 'weekly' && (
+                            <div>
+                                <div className="mb-1.5 text-sm font-medium text-ink">{t('rf.weekdays')}</div>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {WEEKDAY_ORDER.map((day) => (
+                                        <button
+                                            key={day}
+                                            type="button"
+                                            onClick={() => toggleWeekday(day)}
+                                            className={`rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+                                                plan.weekdays.includes(day)
+                                                    ? 'border-accent bg-accent text-white'
+                                                    : 'border-line text-muted hover:text-ink'
+                                            }`}
+                                            aria-pressed={plan.weekdays.includes(day)}
+                                        >
+                                            {t(`wd.${day}`)}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {plan.frequency === 'custom' && (
+                            <Field label={t('rf.cronExpr')}>
+                                <Input
+                                    value={form.scheduleCron}
+                                    onChange={(e) => updatePlan({ cron: e.target.value })}
+                                    className={`font-mono ${cronInfo.valid ? '' : 'border-danger'}`}
+                                />
+                            </Field>
+                        )}
+
+                        <p className="text-xs text-muted">
+                            {cronInfo.valid ? t('rf.nextRun', { time: formatDate(cronInfo.nextRun) }) : t('rf.invalidCron')}
+                            <span className="ml-2 font-mono opacity-60">{form.scheduleCron}</span>
+                        </p>
                     </div>
-                </Field>
+                </fieldset>
 
                 <Toggle checked={form.enabled} onChange={(v) => set('enabled', v)} label={t('rf.enabled')} />
 
@@ -224,7 +325,8 @@ function toInput(rule: Rule): RuleInput {
         enabled: rule.enabled,
         folders: rule.folders,
         filter: rule.filter,
-        minAgeDays: rule.minAgeDays,
+        minAge: rule.minAge,
+        minAgeUnit: rule.minAgeUnit,
         action: rule.action,
         scheduleCron: rule.scheduleCron,
     };

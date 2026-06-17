@@ -4,7 +4,8 @@ import { PageHeader } from '../components/Layout.js';
 import { Badge, Button, Card, EmptyState, Spinner, Toggle } from '../components/ui.js';
 import { api, type Rule, type Source } from '../lib/api.js';
 import { formatDate, relativeTime } from '../lib/format.js';
-import { CRON_PRESETS, useI18n } from '../lib/i18n.js';
+import { useI18n } from '../lib/i18n.js';
+import { describeSchedule } from '../lib/schedule.js';
 import RuleForm from './RuleForm.js';
 
 export default function Rules() {
@@ -23,10 +24,7 @@ export default function Rules() {
     }, []);
 
     const sourceName = (id: string) => sources.find((s) => s.id === id)?.name ?? t('rules.unknownMailbox');
-    const describeCron = (cron: string) => {
-        const preset = CRON_PRESETS.find((p) => p.value === cron);
-        return preset ? t(preset.key) : cron;
-    };
+    const ageLabel = (rule: Rule) => `${rule.minAge} ${rule.minAgeUnit === 'hours' ? t('rf.hours') : t('rf.days')}`;
 
     const toggleEnabled = async (rule: Rule) => {
         await api.updateRule(rule.id, { ...rule, enabled: !rule.enabled });
@@ -106,8 +104,8 @@ export default function Rules() {
                                     <div className="mt-1 font-mono text-xs text-muted">
                                         {t('rules.metaLine', {
                                             source: sourceName(rule.sourceId),
-                                            days: rule.minAgeDays,
-                                            schedule: describeCron(rule.scheduleCron),
+                                            age: ageLabel(rule),
+                                            schedule: describeSchedule(rule.scheduleCron, t),
                                         })}
                                     </div>
                                     <div className="mt-3 flex flex-wrap gap-1.5">

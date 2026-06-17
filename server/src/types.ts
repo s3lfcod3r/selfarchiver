@@ -58,13 +58,17 @@ export type RuleFilter = z.infer<typeof ruleFilterSchema>;
 export const ruleActionSchema = z.enum(['archive', 'archive_delete']);
 export type RuleAction = z.infer<typeof ruleActionSchema>;
 
+export const ageUnitSchema = z.enum(['days', 'hours']);
+export type AgeUnit = z.infer<typeof ageUnitSchema>;
+
 export const ruleInputSchema = z.object({
     sourceId: z.string().min(1),
     name: z.string().min(1).max(120),
     enabled: z.boolean().default(true),
     folders: z.array(z.string().min(1)).min(1, 'Select at least one folder'),
     filter: ruleFilterSchema.default(ruleFilterSchema.parse({})),
-    minAgeDays: z.number().int().min(0).max(36500).default(30),
+    minAge: z.number().int().min(0).max(100000).default(30),
+    minAgeUnit: ageUnitSchema.default('days'),
     action: ruleActionSchema.default('archive'),
     scheduleCron: z.string().min(1).max(120).default('0 3 * * *'),
 });
@@ -77,7 +81,8 @@ export interface Rule {
     enabled: boolean;
     folders: string[];
     filter: RuleFilter;
-    minAgeDays: number;
+    minAge: number;
+    minAgeUnit: AgeUnit;
     action: RuleAction;
     scheduleCron: string;
     lastRunAt: number | null;
