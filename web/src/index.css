@@ -78,8 +78,8 @@ html[data-theme='dark'] {
     --color-ink: #e6edf3;
     --color-muted: #8b949e;
     --color-line: #2b313b;
-    --color-accent: #f0883e;
-    --color-accent-soft: rgba(240, 136, 62, 0.15);
+    --color-accent: #2dd4bf;
+    --color-accent-soft: rgba(45, 212, 191, 0.15);
     --color-teal: #2dd4bf;
     --color-teal-soft: rgba(45, 212, 191, 0.16);
     --color-danger: #f87171;
