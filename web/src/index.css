@@ -7,17 +7,18 @@
  * deliberate, technical character instead of a generic dashboard look.
  */
 @theme {
-    --color-paper: #f7f3ec;
-    --color-surface: #fffdf9;
-    --color-ink: #1c1a17;
-    --color-muted: #6f675c;
-    --color-line: #e4dccd;
-    --color-accent: #c2410c;
-    --color-accent-soft: #f3e2d3;
-    --color-teal: #0f766e;
-    --color-teal-soft: #d6ece9;
-    --color-danger: #b91c1c;
-    --color-danger-soft: #f6dada;
+    /* Dark-only "archival console" — cool GitHub-style charcoal with teal accent. */
+    --color-paper: #0d1117;
+    --color-surface: #161b22;
+    --color-ink: #e6edf3;
+    --color-muted: #8b949e;
+    --color-line: #2b313b;
+    --color-accent: #2dd4bf;
+    --color-accent-soft: rgba(45, 212, 191, 0.15);
+    --color-teal: #2dd4bf;
+    --color-teal-soft: rgba(45, 212, 191, 0.16);
+    --color-danger: #f87171;
+    --color-danger-soft: rgba(248, 113, 113, 0.16);
 
     --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, monospace;
@@ -35,6 +36,7 @@ body {
     margin: 0;
     background-color: var(--color-paper);
     color: var(--color-ink);
+    color-scheme: dark;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
 }
@@ -59,34 +61,4 @@ body::before {
 ::selection {
     background: var(--color-accent);
     color: white;
-}
-
-/*
- * Dark theme: override the design tokens so every Tailwind utility adapts.
- * Keeps the SelfArchiver identity (warm charcoal paper, amber accent, teal),
- * just brightened for legibility on dark.
- */
-:root {
-    color-scheme: light;
-}
-
-html[data-theme='dark'] {
-    color-scheme: dark;
-    /* Cool GitHub-style dark (no warm brown); SelfArchiver keeps its amber accent. */
-    --color-paper: #0d1117;
-    --color-surface: #161b22;
-    --color-ink: #e6edf3;
-    --color-muted: #8b949e;
-    --color-line: #2b313b;
-    --color-accent: #2dd4bf;
-    --color-accent-soft: rgba(45, 212, 191, 0.15);
-    --color-teal: #2dd4bf;
-    --color-teal-soft: rgba(45, 212, 191, 0.16);
-    --color-danger: #f87171;
-    --color-danger-soft: rgba(248, 113, 113, 0.16);
-}
-
-/* On dark, soften the paper grain so it doesn't read as noise. */
-html[data-theme='dark'] body::before {
-    opacity: 0.35;
 }

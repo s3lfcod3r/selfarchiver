@@ -33,7 +33,7 @@ Alles steckt in **einem Container**: SQLite (mit Volltextsuche) und `.eml`-Datei
 | **Retention** | *Nur archivieren* oder *Archivieren, dann aus Postfach löschen*. Gelöscht wird nur nach bestätigter Archivierung. |
 | **Archiv** | Durchsuchen + Volltextsuche (Betreff, Absender, Empfänger, Inhalt); Filter nach Postfach, Ordner und Sende-Datum. Jede Mail als `.eml` herunterladbar. |
 | **Aktivität** | Lauf-Historie mit Anzahl geprüft / archiviert / gelöscht und Fehlern. |
-| **Oberfläche** | Hell & Dunkel, Deutsch & Englisch, ein-/ausklappbare Sidebar. |
+| **Oberfläche** | Eigenständiges dunkles UI, Deutsch & Englisch (in der Sidebar umschaltbar), ein-/ausklappbare Navigation. |
 | **Login** | Optionaler Ein-Passwort-Login für die gesamte Oberfläche. |
 
 ## Funktionsweise

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LanguageToggle, ThemeToggle } from '../components/Layout.js';
+import { LanguageToggle } from '../components/Layout.js';
 import { Button, Card, Input } from '../components/ui.js';
 import { api } from '../lib/api.js';
 import { useI18n } from '../lib/i18n.js';
@@ -45,10 +45,7 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
                     </Button>
                 </form>
             </Card>
-            <div className="flex gap-2">
-                <ThemeToggle />
-                <LanguageToggle />
-            </div>
+            <LanguageToggle />
         </div>
     );
 }

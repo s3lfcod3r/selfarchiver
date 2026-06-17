@@ -33,8 +33,7 @@ Everything lives in **one container**: SQLite (with full-text search) and `.eml`
 | **Retention** | *Archive only* or *Archive, then delete from mailbox*. Deletion only happens after a confirmed archive. |
 | **Archive** | Browse + full-text search (subject, sender, recipients, body). Download any message as `.eml`. |
 | **Activity** | Run history with scanned / archived / deleted counts and errors. |
-| **Language** | UI in English & German, switchable in the sidebar (remembers your choice). |
-| **Theme** | Light & dark, switchable in the sidebar; first visit follows your OS preference. |
+| **Interface** | Distinctive dark UI, English & German (switchable in the sidebar), collapsible navigation. |
 | **Auth** | Optional single-password login for the whole UI. |
 
 ## How it works
