@@ -44,7 +44,7 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
     const hideWhenCollapsed = collapsed ? 'md:hidden' : '';
 
     return (
-        <div className="mx-auto flex min-h-full max-w-[1400px] flex-col md:flex-row">
+        <div className="flex min-h-full flex-col md:flex-row">
             <aside
                 className={`flex shrink-0 flex-col border-line md:h-screen md:border-r md:py-6 ${
                     collapsed ? 'md:w-[4.5rem]' : 'md:w-64'

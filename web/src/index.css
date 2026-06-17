@@ -72,17 +72,18 @@ body::before {
 
 html[data-theme='dark'] {
     color-scheme: dark;
-    --color-paper: #16130f;
-    --color-surface: #1f1b15;
-    --color-ink: #f1eadf;
-    --color-muted: #a89c8a;
-    --color-line: #332c22;
-    --color-accent: #e57a36;
-    --color-accent-soft: #3a2616;
+    /* Cool GitHub-style dark (no warm brown); SelfArchiver keeps its amber accent. */
+    --color-paper: #0d1117;
+    --color-surface: #161b22;
+    --color-ink: #e6edf3;
+    --color-muted: #8b949e;
+    --color-line: #2b313b;
+    --color-accent: #f0883e;
+    --color-accent-soft: rgba(240, 136, 62, 0.15);
     --color-teal: #2dd4bf;
-    --color-teal-soft: #14302c;
+    --color-teal-soft: rgba(45, 212, 191, 0.16);
     --color-danger: #f87171;
-    --color-danger-soft: #3a1c1c;
+    --color-danger-soft: rgba(248, 113, 113, 0.16);
 }
 
 /* On dark, soften the paper grain so it doesn't read as noise. */
