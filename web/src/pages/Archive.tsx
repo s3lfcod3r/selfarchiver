@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../components/Layout.js';
-import { Badge, Button, Card, EmptyState, Input, Select, Spinner } from '../components/ui.js';
+import { Badge, Button, Card, EmptyState, Input, Modal, Select, Spinner } from '../components/ui.js';
 import { api, type ArchivedEmail, type Source } from '../lib/api.js';
 import { formatBytes, formatDate } from '../lib/format.js';
 import { useI18n } from '../lib/i18n.js';
@@ -30,6 +30,7 @@ export default function Archive() {
     const [items, setItems] = useState<ArchivedEmail[]>([]);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
+    const [viewing, setViewing] = useState<ArchivedEmail | null>(null);
 
     useEffect(() => {
         void api.listSources().then(setSources);
@@ -108,16 +109,18 @@ export default function Archive() {
                 <Card className="overflow-hidden">
                     <ul className="divide-y divide-line">
                         {items.map((email) => (
-                            <li key={email.id} className="flex items-center gap-4 px-5 py-3.5">
-                                <div className="min-w-0 flex-1">
+                            <li key={email.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-line/30">
+                                <button onClick={() => setViewing(email)} className="min-w-0 flex-1 text-left">
                                     <div className="flex items-center gap-2">
-                                        <span className="truncate text-sm font-medium">{email.subject || t('arch.noSubject')}</span>
+                                        <span className="truncate text-sm font-medium hover:text-accent">
+                                            {email.subject || t('arch.noSubject')}
+                                        </span>
                                         {email.hasAttachments && <Badge tone="accent">📎 {email.attachmentNames.length}</Badge>}
                                     </div>
                                     <div className="truncate font-mono text-xs text-muted">
                                         {email.fromAddr || t('arch.unknown')} · {email.folder}
                                     </div>
-                                </div>
+                                </button>
                                 <div className="hidden text-right font-mono text-xs text-muted sm:block">
                                     <div>{formatDate(email.sentAt)}</div>
                                     <div>{formatBytes(email.size)}</div>
@@ -137,6 +140,94 @@ export default function Archive() {
                     )}
                 </Card>
             )}
+
+            {viewing && <EmailViewer email={viewing} onClose={() => setViewing(null)} />}
         </>
+    );
+}
+
+function EmailViewer({ email, onClose }: { email: ArchivedEmail; onClose: () => void }) {
+    const { t } = useI18n();
+    const [content, setContent] = useState<Awaited<ReturnType<typeof api.emailContent>> | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [mode, setMode] = useState<'text' | 'html'>('text');
+
+    useEffect(() => {
+        api.emailContent(email.id)
+            .then((c) => {
+                setContent(c);
+                setMode(c.text ? 'text' : c.html ? 'html' : 'text');
+            })
+            .catch((err) => setError(err instanceof Error ? err.message : 'error'));
+    }, [email.id]);
+
+    return (
+        <Modal
+            wide
+            title={email.subject || t('arch.noSubject')}
+            onClose={onClose}
+            footer={
+                <>
+                    <a href={api.downloadUrl(email.id)} className="mr-auto text-sm font-medium text-accent hover:underline">
+                        .eml
+                    </a>
+                    <Button onClick={onClose}>{t('common.close')}</Button>
+                </>
+            }
+        >
+            <div className="flex flex-col gap-3">
+                <div className="rounded-lg border border-line bg-paper/40 p-3 font-mono text-xs text-muted">
+                    <div>{email.fromAddr || t('arch.unknown')}</div>
+                    <div>
+                        {email.folder} · {formatDate(email.sentAt)} · {formatBytes(email.size)}
+                    </div>
+                    {email.attachmentNames.length > 0 && (
+                        <div className="mt-1">📎 {email.attachmentNames.join(', ')}</div>
+                    )}
+                </div>
+
+                {error ? (
+                    <p className="text-sm text-danger">{error}</p>
+                ) : !content ? (
+                    <div className="flex justify-center py-10 text-muted">
+                        <Spinner />
+                    </div>
+                ) : content.text || content.html ? (
+                    <>
+                        {content.text && content.html && (
+                            <div className="inline-flex w-fit items-center gap-1 rounded-lg border border-line bg-surface p-1 text-xs font-medium">
+                                <button
+                                    onClick={() => setMode('text')}
+                                    className={`rounded-md px-2.5 py-1 ${mode === 'text' ? 'bg-accent text-white' : 'text-muted'}`}
+                                >
+                                    {t('arch.plain')}
+                                </button>
+                                <button
+                                    onClick={() => setMode('html')}
+                                    className={`rounded-md px-2.5 py-1 ${mode === 'html' ? 'bg-accent text-white' : 'text-muted'}`}
+                                >
+                                    {t('arch.formatted')}
+                                </button>
+                            </div>
+                        )}
+                        {mode === 'html' && content.html ? (
+                            // Sandboxed (no scripts) so archived HTML can't run anything.
+                            <iframe
+                                sandbox=""
+                                srcDoc={content.html}
+                                title="email"
+                                className="h-[55vh] w-full rounded-lg border border-line bg-white"
+                            />
+                        ) : (
+                            <pre className="max-h-[55vh] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-line bg-paper/40 p-3 text-sm">
+                                {content.text || ''}
+                            </pre>
+                        )}
+                    </>
+                ) : (
+                    <p className="text-sm text-muted">{t('arch.noContent')}</p>
+                )}
+            </div>
+        </Modal>
     );
 }

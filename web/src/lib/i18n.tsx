@@ -16,6 +16,7 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'common.delete': 'Delete',
         'common.test': 'Test',
         'common.runNow': 'Run now',
+        'common.close': 'Close',
 
         'nav.overview': 'Overview',
         'nav.mailboxes': 'Mailboxes',
@@ -173,6 +174,9 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'arch.noSubject': '(no subject)',
         'arch.unknown': 'unknown',
         'arch.loadMore': 'Load more ({n} left)',
+        'arch.noContent': 'No content',
+        'arch.plain': 'Text',
+        'arch.formatted': 'Formatted',
 
         'runs.subtitle': 'Every rule run, what it archived, and what it removed from source.',
         'runs.none': 'No activity yet',
@@ -198,6 +202,7 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'common.delete': 'Löschen',
         'common.test': 'Testen',
         'common.runNow': 'Jetzt ausführen',
+        'common.close': 'Schließen',
 
         'nav.overview': 'Übersicht',
         'nav.mailboxes': 'Postfächer',
@@ -356,6 +361,9 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'arch.noSubject': '(kein Betreff)',
         'arch.unknown': 'unbekannt',
         'arch.loadMore': 'Mehr laden (noch {n})',
+        'arch.noContent': 'Kein Inhalt',
+        'arch.plain': 'Text',
+        'arch.formatted': 'Formatiert',
 
         'runs.subtitle': 'Jeder Regellauf — was archiviert und was aus der Quelle entfernt wurde.',
         'runs.none': 'Noch keine Aktivität',

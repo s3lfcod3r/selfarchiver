@@ -1,8 +1,16 @@
 import { createReadStream } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import type { FastifyInstance } from 'fastify';
+import { simpleParser } from 'mailparser';
 import { env } from '../env.js';
 import { distinctFolders, getEmail, queryEmails } from '../repos/emails.js';
+
+function safeArchivePath(emlPath: string): string | null {
+    const abs = resolve(env.archiveDir, emlPath);
+    if (abs !== env.archiveDir && !abs.startsWith(env.archiveDir + sep)) return null;
+    return abs;
+}
 
 /** REST endpoints for browsing, searching and downloading archived emails. */
 
@@ -50,15 +58,36 @@ export function registerArchiveRoutes(app: FastifyInstance): void {
         const email = getEmail(id);
         if (!email) return reply.code(404).send({ error: 'Email not found' });
 
-        // Defense in depth: ensure the stored path cannot escape the archive root.
-        const absPath = resolve(env.archiveDir, email.emlPath);
-        if (absPath !== env.archiveDir && !absPath.startsWith(env.archiveDir + sep)) {
-            return reply.code(400).send({ error: 'Invalid archive path' });
-        }
+        const absPath = safeArchivePath(email.emlPath);
+        if (!absPath) return reply.code(400).send({ error: 'Invalid archive path' });
 
         const fileName = `${(email.subject ?? 'email').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60)}.eml`;
         reply.header('Content-Type', 'message/rfc822');
         reply.header('Content-Disposition', `attachment; filename="${fileName}"`);
         return reply.send(createReadStream(absPath));
+    });
+
+    // Parsed content of one archived email (headers + text/HTML body), for the viewer.
+    app.get('/api/emails/:id/content', async (req, reply) => {
+        const { id } = req.params as { id: string };
+        const email = getEmail(id);
+        if (!email) return reply.code(404).send({ error: 'Email not found' });
+        const absPath = safeArchivePath(email.emlPath);
+        if (!absPath) return reply.code(400).send({ error: 'Invalid archive path' });
+
+        try {
+            const parsed = await simpleParser(await readFile(absPath));
+            return {
+                subject: parsed.subject ?? email.subject,
+                from: parsed.from?.text ?? email.fromAddr,
+                to: Array.isArray(parsed.to) ? parsed.to.map((a) => a.text).join(', ') : (parsed.to?.text ?? email.toAddr),
+                date: parsed.date ? parsed.date.getTime() : email.sentAt,
+                text: parsed.text ?? null,
+                html: typeof parsed.html === 'string' ? parsed.html : null,
+                attachments: (parsed.attachments ?? []).map((a) => a.filename ?? 'attachment'),
+            };
+        } catch (err) {
+            return reply.code(500).send({ error: err instanceof Error ? err.message : 'Failed to read email' });
+        }
     });
 }

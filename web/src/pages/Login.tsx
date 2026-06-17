@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LanguageToggle } from '../components/Layout.js';
+import { LanguageToggle, ThemeToggle } from '../components/Layout.js';
 import { Button, Card, Input } from '../components/ui.js';
 import { api } from '../lib/api.js';
 import { useI18n } from '../lib/i18n.js';
@@ -28,7 +28,7 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
         <div className="flex min-h-full flex-col items-center justify-center gap-4 px-4">
             <Card className="w-full max-w-sm p-8">
                 <div className="mb-6 flex flex-col items-center gap-2 text-center">
-                    <img src="/logo-wide.png" alt="SelfArchiver" className="h-12 w-auto" />
+                    <img src="/logo-wide.png" alt="SelfArchiver" className="h-16 w-auto" />
                     <div className="font-mono text-xs text-muted">{t('login.subtitle')}</div>
                 </div>
                 <form onSubmit={submit} className="flex flex-col gap-4">
@@ -45,7 +45,10 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
                     </Button>
                 </form>
             </Card>
-            <LanguageToggle />
+            <div className="flex gap-2">
+                <ThemeToggle />
+                <LanguageToggle />
+            </div>
         </div>
     );
 }

@@ -62,3 +62,22 @@ body::before {
     background: var(--color-accent);
     color: white;
 }
+
+/* Optional light theme: white surfaces with dark (deep-teal) accents. */
+html[data-theme='light'] {
+    color-scheme: light;
+    --color-paper: #f5f7fa;
+    --color-surface: #ffffff;
+    --color-ink: #0f172a;
+    --color-muted: #5b6675;
+    --color-line: #e2e8f0;
+    --color-accent: #0f766e;
+    --color-accent-soft: rgba(15, 118, 110, 0.1);
+    --color-teal: #0f766e;
+    --color-teal-soft: rgba(15, 118, 110, 0.1);
+    --color-danger: #b91c1c;
+    --color-danger-soft: rgba(185, 28, 28, 0.1);
+}
+html[data-theme='light'] body::before {
+    opacity: 0.6;
+}

@@ -194,6 +194,16 @@ export const api = {
     },
     archiveFolders: (sourceId?: string) =>
         request<{ folders: string[] }>(`/emails/folders${sourceId ? `?sourceId=${sourceId}` : ''}`).then((r) => r.folders),
+    emailContent: (id: string) =>
+        request<{
+            subject: string | null;
+            from: string | null;
+            to: string | null;
+            date: number | null;
+            text: string | null;
+            html: string | null;
+            attachments: string[];
+        }>(`/emails/${id}/content`),
     downloadUrl: (id: string) => `/api/emails/${id}/download`,
 
     listRuns: (ruleId?: string) =>

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { useI18n } from '../lib/i18n.js';
+import { useTheme } from '../lib/theme.js';
 
 /** App shell: branded, collapsible sidebar + routed content area. */
 
@@ -50,7 +51,7 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                 }`}
             >
                 <div className="flex items-center justify-between gap-2 px-5 py-4 md:px-3 md:py-2">
-                    <img src="/logo-wide.png" alt="SelfArchiver" className={`h-9 w-auto ${hideWhenCollapsed}`} />
+                    <img src="/logo-wide.png" alt="SelfArchiver" className={`h-12 w-auto ${hideWhenCollapsed}`} />
                     {collapsed && <img src="/icon.png" alt="SelfArchiver" className="hidden h-8 w-8 md:block" />}
                     <button
                         type="button"
@@ -83,7 +84,8 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                 </nav>
 
                 <div className="mt-auto flex flex-col gap-3 px-3 pb-3 md:pb-0">
-                    <div className={hideWhenCollapsed}>
+                    <div className={`flex items-center gap-2 ${hideWhenCollapsed}`}>
+                        <ThemeToggle />
                         <LanguageToggle />
                     </div>
                     <div className={`px-1 font-mono text-[10px] text-muted ${hideWhenCollapsed}`}>SelfArchiver {APP_VERSION}</div>
@@ -103,6 +105,32 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
             <main className="flex-1 px-5 py-6 md:px-10 md:py-10">
                 <Outlet />
             </main>
+        </div>
+    );
+}
+
+export function ThemeToggle() {
+    const { theme, setTheme } = useTheme();
+    const options: { value: 'light' | 'dark'; glyph: string; label: string }[] = [
+        { value: 'light', glyph: '☀', label: 'Light' },
+        { value: 'dark', glyph: '☾', label: 'Dark' },
+    ];
+    return (
+        <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1 text-xs font-medium">
+            {options.map((opt) => (
+                <button
+                    key={opt.value}
+                    onClick={() => setTheme(opt.value)}
+                    className={`rounded-md px-2.5 py-1 transition-colors ${
+                        theme === opt.value ? 'bg-accent text-white' : 'text-muted hover:text-ink'
+                    }`}
+                    title={opt.label}
+                    aria-label={opt.label}
+                    aria-pressed={theme === opt.value}
+                >
+                    {opt.glyph}
+                </button>
+            ))}
         </div>
     );
 }
