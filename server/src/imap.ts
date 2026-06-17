@@ -185,9 +185,11 @@ export async function* fetchEnvelopes(
 ): AsyncGenerator<EnvelopeSummary> {
     const lock = await client.getMailboxLock(folder);
     try {
-        // IMAP BEFORE is date-granular and exclusive, so add a day to avoid
-        // dropping same-day mail; the runner then filters by exact timestamp.
-        const search: Record<string, unknown> = { before: new Date(cutoffMs + 86400000) };
+        // Use SENTBEFORE (the message's Date header), not BEFORE (the server's
+        // internal/received date) — otherwise imported archives, whose internal
+        // date is the import time, are wrongly excluded. Add a day because the
+        // search is date-granular; the runner then filters by exact timestamp.
+        const search: Record<string, unknown> = { sentBefore: new Date(cutoffMs + 86400000) };
         if (seenOnly) search.seen = true;
         for await (const msg of client.fetch(search, {
             uid: true,
