@@ -50,13 +50,16 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                     collapsed ? 'md:w-[4.5rem]' : 'md:w-64'
                 }`}
             >
-                <div className="flex items-center justify-between gap-2 px-5 py-4 md:px-3 md:py-2">
+                <div className={`flex items-center px-5 py-4 md:px-3 md:py-2 ${collapsed ? 'md:justify-center' : ''}`}>
                     <img src="/logo-wide.png" alt="SelfArchiver" className={`h-12 w-auto ${hideWhenCollapsed}`} />
                     {collapsed && <img src="/icon.png" alt="SelfArchiver" className="hidden h-8 w-8 md:block" />}
+                </div>
+
+                <div className={`hidden px-3 md:flex ${collapsed ? 'md:justify-center' : 'md:justify-end'}`}>
                     <button
                         type="button"
                         onClick={toggleCollapsed}
-                        className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-md border border-line text-muted hover:border-accent/50 hover:text-ink md:inline-flex"
+                        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-line text-muted hover:border-accent/50 hover:text-ink"
                         title={collapsed ? t('nav.expand') : t('nav.collapse')}
                         aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
                     >
@@ -64,7 +67,7 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                     </button>
                 </div>
 
-                <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:mt-6 md:flex-col md:overflow-visible md:pb-0">
+                <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:mt-4 md:flex-col md:overflow-visible md:pb-0">
                     {NAV.map((item) => (
                         <NavLink
                             key={item.to}
