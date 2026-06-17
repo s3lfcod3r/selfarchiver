@@ -36,7 +36,6 @@ body {
     margin: 0;
     background-color: var(--color-paper);
     color: var(--color-ink);
-    color-scheme: dark;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
 }
@@ -61,6 +60,20 @@ body::before {
 ::selection {
     background: var(--color-accent);
     color: white;
+}
+
+/*
+ * Native controls (select dropdown lists, date pickers, scrollbars) follow the
+ * theme. color-scheme must live on the root, and option lists need explicit
+ * colours so the popups aren't rendered light on dark.
+ */
+:root {
+    color-scheme: dark;
+}
+select option,
+select optgroup {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
 }
 
 /* Optional light theme: white surfaces with dark (deep-teal) accents. */
