@@ -18,12 +18,8 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
     return (
         <div className="mx-auto flex min-h-full max-w-[1400px] flex-col md:flex-row">
             <aside className="flex shrink-0 flex-col border-line md:h-screen md:w-64 md:border-r md:py-6">
-                <div className="flex items-center gap-3 px-5 py-4 md:py-2">
-                    <Logo />
-                    <div className="leading-tight">
-                        <div className="font-semibold tracking-tight">SelfArchiver</div>
-                        <div className="font-mono text-[11px] text-muted">{t('app.tagline')}</div>
-                    </div>
+                <div className="px-5 py-4 md:py-2">
+                    <img src="/logo-wide.png" alt="SelfArchiver" className="h-9 w-auto" />
                 </div>
                 <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:mt-6 md:flex-col md:overflow-visible md:pb-0">
                     {NAV.map((item) => (
@@ -90,17 +86,6 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
             </div>
             {action}
         </div>
-    );
-}
-
-function Logo() {
-    return (
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-white">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 7l2-3h14l2 3v12a1 1 0 01-1 1H4a1 1 0 01-1-1V7z" />
-                <path d="M3 7h18M9 12h6" strokeLinecap="round" />
-            </svg>
-        </span>
     );
 }
 

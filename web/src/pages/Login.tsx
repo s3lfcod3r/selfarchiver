@@ -27,17 +27,9 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
     return (
         <div className="flex min-h-full flex-col items-center justify-center gap-4 px-4">
             <Card className="w-full max-w-sm p-8">
-                <div className="mb-6 flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-white">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M3 7l2-3h14l2 3v12a1 1 0 01-1 1H4a1 1 0 01-1-1V7z" />
-                            <path d="M3 7h18M9 12h6" strokeLinecap="round" />
-                        </svg>
-                    </span>
-                    <div>
-                        <div className="text-lg font-semibold">SelfArchiver</div>
-                        <div className="font-mono text-xs text-muted">{t('login.subtitle')}</div>
-                    </div>
+                <div className="mb-6 flex flex-col items-center gap-2 text-center">
+                    <img src="/logo-wide.png" alt="SelfArchiver" className="h-12 w-auto" />
+                    <div className="font-mono text-xs text-muted">{t('login.subtitle')}</div>
                 </div>
                 <form onSubmit={submit} className="flex flex-col gap-4">
                     <Input

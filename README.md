@@ -1,6 +1,10 @@
-# SelfArchiver
+<p align="center">
+  <img src="assets/selfarchiver-logo-wide.png" alt="SelfArchiver" width="440">
+</p>
 
-Self-hosted email archiver that keeps your mailbox **small** and your mail **safe** — with the controls other archivers are missing.
+<p align="center">Self-hosted email archiver that keeps your mailbox <strong>small</strong> and your mail <strong>safe</strong> — with the controls other archivers are missing.</p>
+
+---
 
 Most archivers can only mirror a whole account. SelfArchiver is built around four things they don't do:
 
