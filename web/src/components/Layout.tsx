@@ -1,18 +1,20 @@
 import type { ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { api } from '../lib/api.js';
+import { useI18n } from '../lib/i18n.js';
 
 /** App shell: branded sidebar + routed content area. */
 
-const NAV: { to: string; label: string; icon: ReactNode }[] = [
-    { to: '/', label: 'Overview', icon: <IconGrid /> },
-    { to: '/sources', label: 'Mailboxes', icon: <IconMail /> },
-    { to: '/rules', label: 'Rules', icon: <IconRules /> },
-    { to: '/archive', label: 'Archive', icon: <IconArchive /> },
-    { to: '/runs', label: 'Activity', icon: <IconClock /> },
+const NAV: { to: string; key: string; icon: ReactNode }[] = [
+    { to: '/', key: 'nav.overview', icon: <IconGrid /> },
+    { to: '/sources', key: 'nav.mailboxes', icon: <IconMail /> },
+    { to: '/rules', key: 'nav.rules', icon: <IconRules /> },
+    { to: '/archive', key: 'nav.archive', icon: <IconArchive /> },
+    { to: '/runs', key: 'nav.activity', icon: <IconClock /> },
 ];
 
 export default function Layout({ authRequired }: { authRequired: boolean }) {
+    const { t } = useI18n();
     return (
         <div className="mx-auto flex min-h-full max-w-[1400px] flex-col md:flex-row">
             <aside className="flex shrink-0 flex-col border-line md:h-screen md:w-64 md:border-r md:py-6">
@@ -20,7 +22,7 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                     <Logo />
                     <div className="leading-tight">
                         <div className="font-semibold tracking-tight">SelfArchiver</div>
-                        <div className="font-mono text-[11px] text-muted">mailbox keeper</div>
+                        <div className="font-mono text-[11px] text-muted">{t('app.tagline')}</div>
                     </div>
                 </div>
                 <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:mt-6 md:flex-col md:overflow-visible md:pb-0">
@@ -36,24 +38,45 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                             }
                         >
                             <span className="shrink-0">{item.icon}</span>
-                            {item.label}
+                            {t(item.key)}
                         </NavLink>
                     ))}
                 </nav>
-                {authRequired && (
-                    <div className="mt-auto hidden px-3 md:block">
+                <div className="mt-auto flex flex-col gap-3 px-3 pb-3 md:pb-0">
+                    <LanguageToggle />
+                    {authRequired && (
                         <button
                             onClick={() => void api.logout().then(() => window.location.reload())}
                             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:bg-line/40 hover:text-ink"
                         >
-                            <IconLogout /> Sign out
+                            <IconLogout /> {t('action.signOut')}
                         </button>
-                    </div>
-                )}
+                    )}
+                </div>
             </aside>
             <main className="flex-1 px-5 py-6 md:px-10 md:py-10">
                 <Outlet />
             </main>
+        </div>
+    );
+}
+
+export function LanguageToggle() {
+    const { lang, setLang } = useI18n();
+    return (
+        <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1 text-xs font-medium">
+            {(['en', 'de'] as const).map((code) => (
+                <button
+                    key={code}
+                    onClick={() => setLang(code)}
+                    className={`rounded-md px-2.5 py-1 uppercase transition-colors ${
+                        lang === code ? 'bg-accent text-white' : 'text-muted hover:text-ink'
+                    }`}
+                    aria-pressed={lang === code}
+                >
+                    {code}
+                </button>
+            ))}
         </div>
     );
 }

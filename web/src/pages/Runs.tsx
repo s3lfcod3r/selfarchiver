@@ -3,8 +3,10 @@ import { PageHeader } from '../components/Layout.js';
 import { Badge, Card, EmptyState, Spinner } from '../components/ui.js';
 import { api, type Rule, type Run } from '../lib/api.js';
 import { formatDate, relativeTime } from '../lib/format.js';
+import { useI18n } from '../lib/i18n.js';
 
 export default function Runs() {
+    const { t } = useI18n();
     const [runs, setRuns] = useState<Run[] | null>(null);
     const [rules, setRules] = useState<Rule[]>([]);
 
@@ -31,16 +33,16 @@ export default function Runs() {
 
     return (
         <>
-            <PageHeader title="Activity" subtitle="Every rule run, what it archived, and what it removed from source." />
+            <PageHeader title={t('nav.activity')} subtitle={t('runs.subtitle')} />
             {runs.length === 0 ? (
-                <EmptyState title="No activity yet" description="Runs appear here once a rule executes — on schedule or run manually." />
+                <EmptyState title={t('runs.none')} description={t('runs.noneDesc')} />
             ) : (
                 <Card className="overflow-hidden">
                     <div className="grid grid-cols-12 gap-2 border-b border-line bg-paper/50 px-5 py-3 text-xs font-medium uppercase tracking-wide text-muted">
-                        <div className="col-span-4">Rule</div>
-                        <div className="col-span-2">Status</div>
-                        <div className="col-span-4">Result</div>
-                        <div className="col-span-2 text-right">When</div>
+                        <div className="col-span-4">{t('runs.colRule')}</div>
+                        <div className="col-span-2">{t('runs.colStatus')}</div>
+                        <div className="col-span-4">{t('runs.colResult')}</div>
+                        <div className="col-span-2 text-right">{t('runs.colWhen')}</div>
                     </div>
                     <ul className="divide-y divide-line">
                         {runs.map((run) => {
@@ -48,7 +50,7 @@ export default function Runs() {
                             return (
                                 <li key={run.id} className="grid grid-cols-12 items-center gap-2 px-5 py-3 text-sm">
                                     <div className="col-span-4 min-w-0">
-                                        <div className="truncate font-medium">{rule?.name ?? 'Deleted rule'}</div>
+                                        <div className="truncate font-medium">{rule?.name ?? t('runs.deletedRule')}</div>
                                         <div className="font-mono text-xs text-muted">{run.trigger}</div>
                                     </div>
                                     <div className="col-span-2">
@@ -58,9 +60,7 @@ export default function Runs() {
                                         {run.error ? (
                                             <span className="text-danger">{run.error}</span>
                                         ) : (
-                                            <>
-                                                scanned {run.scanned} · archived {run.archived} · deleted {run.deleted}
-                                            </>
+                                            t('runs.resultLine', { s: run.scanned, a: run.archived, d: run.deleted })
                                         )}
                                     </div>
                                     <div className="col-span-2 text-right" title={formatDate(run.startedAt)}>
@@ -77,7 +77,8 @@ export default function Runs() {
 }
 
 function RunBadge({ status }: { status: 'running' | 'success' | 'error' }) {
-    if (status === 'running') return <Badge tone="accent">running</Badge>;
-    if (status === 'error') return <Badge tone="danger">error</Badge>;
-    return <Badge tone="teal">done</Badge>;
+    const { t } = useI18n();
+    if (status === 'running') return <Badge tone="accent">{t('run.running')}</Badge>;
+    if (status === 'error') return <Badge tone="danger">{t('run.error')}</Badge>;
+    return <Badge tone="teal">{t('run.done')}</Badge>;
 }

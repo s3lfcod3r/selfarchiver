@@ -3,10 +3,12 @@ import { PageHeader } from '../components/Layout.js';
 import { Badge, Button, Card, EmptyState, Field, Input, Modal, Spinner, Toggle } from '../components/ui.js';
 import { api, type Source, type SourceFormValues } from '../lib/api.js';
 import { relativeTime } from '../lib/format.js';
+import { useI18n } from '../lib/i18n.js';
 
 const BLANK: SourceFormValues = { name: '', host: '', port: 993, secure: true, username: '', password: '' };
 
 export default function Sources() {
+    const { t } = useI18n();
     const [sources, setSources] = useState<Source[] | null>(null);
     const [editing, setEditing] = useState<{ id: string | null; values: SourceFormValues } | null>(null);
     const [testing, setTesting] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export default function Sources() {
         setTesting(id);
         try {
             const result = await api.testSource(id);
-            alert(result.ok ? 'Connection OK' : `Failed: ${result.error}`);
+            alert(result.ok ? t('sources.testOk') : t('sources.testFailed', { error: result.error ?? '' }));
             await load();
         } finally {
             setTesting(null);
@@ -28,7 +30,7 @@ export default function Sources() {
     };
 
     const onDelete = async (s: Source) => {
-        if (!confirm(`Delete mailbox "${s.name}"? Rules using it are removed too. Archived emails are kept.`)) return;
+        if (!confirm(t('sources.deleteConfirm', { name: s.name }))) return;
         await api.deleteSource(s.id);
         await load();
     };
@@ -36,11 +38,11 @@ export default function Sources() {
     return (
         <>
             <PageHeader
-                title="Mailboxes"
-                subtitle="IMAP accounts SelfArchiver connects to."
+                title={t('nav.mailboxes')}
+                subtitle={t('sources.subtitle')}
                 action={
                     <Button variant="primary" onClick={() => setEditing({ id: null, values: { ...BLANK } })}>
-                        + Add mailbox
+                        {t('sources.add')}
                     </Button>
                 }
             />
@@ -51,11 +53,11 @@ export default function Sources() {
                 </div>
             ) : sources.length === 0 ? (
                 <EmptyState
-                    title="No mailboxes"
-                    description="Add an IMAP mailbox (host, username, password) to start archiving from it."
+                    title={t('sources.none')}
+                    description={t('sources.noneDesc')}
                     action={
                         <Button variant="primary" onClick={() => setEditing({ id: null, values: { ...BLANK } })}>
-                            + Add mailbox
+                            {t('sources.add')}
                         </Button>
                     }
                 />
@@ -76,10 +78,10 @@ export default function Sources() {
                             </div>
                             {s.lastError && <p className="mt-2 text-xs text-danger">{s.lastError}</p>}
                             <div className="mt-4 flex items-center justify-between">
-                                <span className="font-mono text-xs text-muted">checked {relativeTime(s.lastCheckedAt)}</span>
+                                <span className="font-mono text-xs text-muted">{t('sources.checked', { t: relativeTime(s.lastCheckedAt) })}</span>
                                 <div className="flex gap-2">
                                     <Button onClick={() => void onTest(s.id)} disabled={testing === s.id}>
-                                        {testing === s.id ? <Spinner /> : 'Test'}
+                                        {testing === s.id ? <Spinner /> : t('common.test')}
                                     </Button>
                                     <Button
                                         onClick={() =>
@@ -89,10 +91,10 @@ export default function Sources() {
                                             })
                                         }
                                     >
-                                        Edit
+                                        {t('common.edit')}
                                     </Button>
                                     <Button variant="ghost" onClick={() => void onDelete(s)}>
-                                        Delete
+                                        {t('common.delete')}
                                     </Button>
                                 </div>
                             </div>
@@ -127,6 +129,7 @@ function SourceModal({
     onClose: () => void;
     onSaved: () => void;
 }) {
+    const { t } = useI18n();
     const [values, setValues] = useState<SourceFormValues>(initial);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -140,13 +143,13 @@ function SourceModal({
         try {
             const result = id ? await api.updateSource(id, values) : await api.createSource(values);
             if (!result.connectionOk) {
-                setError(`Saved, but connection failed: ${result.error}`);
+                setError(t('form.savedButFailed', { error: result.error ?? '' }));
                 setTimeout(onSaved, 1200);
                 return;
             }
             onSaved();
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to save');
+            setError(err instanceof Error ? err.message : t('form.failedSave'));
         } finally {
             setBusy(false);
         }
@@ -154,36 +157,36 @@ function SourceModal({
 
     return (
         <Modal
-            title={id ? 'Edit mailbox' : 'Add mailbox'}
+            title={id ? t('form.editMailbox') : t('form.addMailbox')}
             onClose={onClose}
             footer={
                 <>
-                    <Button onClick={onClose}>Cancel</Button>
+                    <Button onClick={onClose}>{t('common.cancel')}</Button>
                     <Button variant="primary" onClick={() => void save()} disabled={busy}>
-                        {busy ? <Spinner /> : 'Save & test'}
+                        {busy ? <Spinner /> : t('form.saveTest')}
                     </Button>
                 </>
             }
         >
             <div className="flex flex-col gap-4">
-                <Field label="Name">
-                    <Input value={values.name} onChange={(e) => set('name', e.target.value)} placeholder="Private Gmail" />
+                <Field label={t('form.name')}>
+                    <Input value={values.name} onChange={(e) => set('name', e.target.value)} placeholder={t('form.namePh')} />
                 </Field>
                 <div className="grid grid-cols-3 gap-3">
                     <div className="col-span-2">
-                        <Field label="IMAP host">
+                        <Field label={t('form.imapHost')}>
                             <Input value={values.host} onChange={(e) => set('host', e.target.value)} placeholder="imap.example.com" />
                         </Field>
                     </div>
-                    <Field label="Port">
+                    <Field label={t('form.port')}>
                         <Input type="number" value={values.port} onChange={(e) => set('port', Number(e.target.value))} />
                     </Field>
                 </div>
-                <Toggle checked={values.secure} onChange={(v) => set('secure', v)} label="Use TLS (recommended)" />
-                <Field label="Username">
+                <Toggle checked={values.secure} onChange={(v) => set('secure', v)} label={t('form.useTls')} />
+                <Field label={t('form.username')}>
                     <Input value={values.username} onChange={(e) => set('username', e.target.value)} placeholder="you@example.com" />
                 </Field>
-                <Field label="Password" hint={id ? 'Leave empty to keep the current password.' : 'Use an app password where available.'}>
+                <Field label={t('form.password')} hint={id ? t('form.passwordHintEdit') : t('form.passwordHintNew')}>
                     <Input type="password" value={values.password ?? ''} onChange={(e) => set('password', e.target.value)} />
                 </Field>
                 {error && <p className="text-sm text-danger">{error}</p>}

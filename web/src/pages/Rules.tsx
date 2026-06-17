@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { PageHeader } from '../components/Layout.js';
 import { Badge, Button, Card, EmptyState, Spinner, Toggle } from '../components/ui.js';
 import { api, type Rule, type Source } from '../lib/api.js';
-import { describeCron, formatDate, relativeTime } from '../lib/format.js';
+import { formatDate, relativeTime } from '../lib/format.js';
+import { CRON_PRESETS, useI18n } from '../lib/i18n.js';
 import RuleForm from './RuleForm.js';
 
 export default function Rules() {
+    const { t } = useI18n();
     const [rules, setRules] = useState<Rule[] | null>(null);
     const [sources, setSources] = useState<Source[]>([]);
     const [editing, setEditing] = useState<{ rule: Rule | null } | null>(null);
@@ -20,7 +22,11 @@ export default function Rules() {
         void load();
     }, []);
 
-    const sourceName = (id: string) => sources.find((s) => s.id === id)?.name ?? 'Unknown mailbox';
+    const sourceName = (id: string) => sources.find((s) => s.id === id)?.name ?? t('rules.unknownMailbox');
+    const describeCron = (cron: string) => {
+        const preset = CRON_PRESETS.find((p) => p.value === cron);
+        return preset ? t(preset.key) : cron;
+    };
 
     const toggleEnabled = async (rule: Rule) => {
         await api.updateRule(rule.id, { ...rule, enabled: !rule.enabled });
@@ -30,14 +36,14 @@ export default function Rules() {
     const runNow = async (rule: Rule) => {
         try {
             await api.runRule(rule.id);
-            alert(`"${rule.name}" started. Watch progress under Activity.`);
+            alert(t('rules.started', { name: rule.name }));
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Could not start rule');
+            alert(err instanceof Error ? err.message : t('rules.couldNotStart'));
         }
     };
 
     const remove = async (rule: Rule) => {
-        if (!confirm(`Delete rule "${rule.name}"? Archived emails are kept.`)) return;
+        if (!confirm(t('rules.deleteConfirm', { name: rule.name }))) return;
         await api.deleteRule(rule.id);
         await load();
     };
@@ -47,12 +53,12 @@ export default function Rules() {
     return (
         <>
             <PageHeader
-                title="Rules"
-                subtitle="Each rule archives chosen folders on its own schedule — optionally clearing them from the mailbox."
+                title={t('nav.rules')}
+                subtitle={t('rules.subtitle')}
                 action={
                     canAddRule ? (
                         <Button variant="primary" onClick={() => setEditing({ rule: null })}>
-                            + New rule
+                            {t('rules.new')}
                         </Button>
                     ) : undefined
                 }
@@ -64,21 +70,21 @@ export default function Rules() {
                 </div>
             ) : !canAddRule ? (
                 <EmptyState
-                    title="Add a mailbox first"
-                    description="Rules act on a mailbox, so connect one before creating rules."
+                    title={t('rules.addMailboxFirst')}
+                    description={t('rules.addMailboxFirstDesc')}
                     action={
                         <Link to="/sources" className="text-sm font-medium text-accent hover:underline">
-                            Go to mailboxes →
+                            {t('rules.goToMailboxes')}
                         </Link>
                     }
                 />
             ) : rules.length === 0 ? (
                 <EmptyState
-                    title="No rules yet"
-                    description="Create a rule to archive e.g. the Invoices folder every 30 days and keep your mailbox small."
+                    title={t('rules.noRules')}
+                    description={t('rules.noRulesDesc')}
                     action={
                         <Button variant="primary" onClick={() => setEditing({ rule: null })}>
-                            + New rule
+                            {t('rules.new')}
                         </Button>
                     }
                 />
@@ -91,14 +97,18 @@ export default function Rules() {
                                     <div className="flex items-center gap-2">
                                         <h3 className="font-semibold">{rule.name}</h3>
                                         {rule.action === 'archive_delete' ? (
-                                            <Badge tone="danger">archive + delete</Badge>
+                                            <Badge tone="danger">{t('rules.archiveDelete')}</Badge>
                                         ) : (
-                                            <Badge tone="teal">archive only</Badge>
+                                            <Badge tone="teal">{t('rules.archiveOnly')}</Badge>
                                         )}
-                                        {!rule.enabled && <Badge tone="neutral">paused</Badge>}
+                                        {!rule.enabled && <Badge tone="neutral">{t('rules.paused')}</Badge>}
                                     </div>
                                     <div className="mt-1 font-mono text-xs text-muted">
-                                        {sourceName(rule.sourceId)} · older than {rule.minAgeDays}d · {describeCron(rule.scheduleCron)}
+                                        {t('rules.metaLine', {
+                                            source: sourceName(rule.sourceId),
+                                            days: rule.minAgeDays,
+                                            schedule: describeCron(rule.scheduleCron),
+                                        })}
                                     </div>
                                     <div className="mt-3 flex flex-wrap gap-1.5">
                                         {rule.folders.map((f) => (
@@ -113,13 +123,13 @@ export default function Rules() {
 
                             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
                                 <div className="font-mono text-xs text-muted">
-                                    last run {relativeTime(rule.lastRunAt)} · next {formatDate(rule.nextRunAt)}
+                                    {t('rules.lastNext', { last: relativeTime(rule.lastRunAt), next: formatDate(rule.nextRunAt) })}
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button onClick={() => void runNow(rule)}>Run now</Button>
-                                    <Button onClick={() => setEditing({ rule })}>Edit</Button>
+                                    <Button onClick={() => void runNow(rule)}>{t('common.runNow')}</Button>
+                                    <Button onClick={() => setEditing({ rule })}>{t('common.edit')}</Button>
                                     <Button variant="ghost" onClick={() => void remove(rule)}>
-                                        Delete
+                                        {t('common.delete')}
                                     </Button>
                                 </div>
                             </div>

@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { LanguageToggle } from '../components/Layout.js';
 import { Button, Card, Input } from '../components/ui.js';
 import { api } from '../lib/api.js';
+import { useI18n } from '../lib/i18n.js';
 
 export default function Login({ onSuccess }: { onSuccess: () => void }) {
+    const { t } = useI18n();
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
@@ -15,14 +18,14 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
             await api.login(password);
             onSuccess();
         } catch {
-            setError('Wrong password.');
+            setError(t('login.wrong'));
         } finally {
             setBusy(false);
         }
     };
 
     return (
-        <div className="flex min-h-full items-center justify-center px-4">
+        <div className="flex min-h-full flex-col items-center justify-center gap-4 px-4">
             <Card className="w-full max-w-sm p-8">
                 <div className="mb-6 flex items-center gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent text-white">
@@ -33,23 +36,24 @@ export default function Login({ onSuccess }: { onSuccess: () => void }) {
                     </span>
                     <div>
                         <div className="text-lg font-semibold">SelfArchiver</div>
-                        <div className="font-mono text-xs text-muted">sign in to continue</div>
+                        <div className="font-mono text-xs text-muted">{t('login.subtitle')}</div>
                     </div>
                 </div>
                 <form onSubmit={submit} className="flex flex-col gap-4">
                     <Input
                         type="password"
-                        placeholder="Password"
+                        placeholder={t('login.password')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         autoFocus
                     />
                     {error && <p className="text-sm text-danger">{error}</p>}
                     <Button variant="primary" type="submit" disabled={busy || !password}>
-                        Sign in
+                        {t('login.signIn')}
                     </Button>
                 </form>
             </Card>
+            <LanguageToggle />
         </div>
     );
 }

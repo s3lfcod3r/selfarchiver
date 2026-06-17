@@ -4,8 +4,10 @@ import { PageHeader } from '../components/Layout.js';
 import { Badge, Card, EmptyState, Spinner } from '../components/ui.js';
 import { api, type DashboardData } from '../lib/api.js';
 import { formatBytes, relativeTime } from '../lib/format.js';
+import { useI18n } from '../lib/i18n.js';
 
 export default function Dashboard() {
+    const { t } = useI18n();
     const [data, setData] = useState<DashboardData | null>(null);
 
     useEffect(() => {
@@ -28,20 +30,20 @@ export default function Dashboard() {
 
     return (
         <>
-            <PageHeader title="Overview" subtitle="What SelfArchiver is keeping safe and small." />
+            <PageHeader title={t('nav.overview')} subtitle={t('dash.subtitle')} />
 
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <Stat label="Archived emails" value={data.stats.total.toLocaleString()} sub={formatBytes(data.stats.totalSize)} />
-                <Stat label="Mailboxes" value={String(data.sources.length)} sub={`${okSources} connected`} />
-                <Stat label="Active rules" value={String(enabledRules)} sub={`${data.rules.length} total`} />
-                <Stat label="Recently deleted" value={String(deletedTotal)} sub="from source mailboxes" accent />
+                <Stat label={t('dash.archivedEmails')} value={data.stats.total.toLocaleString()} sub={formatBytes(data.stats.totalSize)} />
+                <Stat label={t('nav.mailboxes')} value={String(data.sources.length)} sub={t('dash.connected', { n: okSources })} />
+                <Stat label={t('dash.activeRules')} value={String(enabledRules)} sub={t('dash.totalRules', { n: data.rules.length })} />
+                <Stat label={t('dash.recentlyDeleted')} value={String(deletedTotal)} sub={t('dash.fromSource')} accent />
             </div>
 
             <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <Card className="p-6">
-                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Recent activity</h2>
+                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">{t('dash.recentActivity')}</h2>
                     {data.recentRuns.length === 0 ? (
-                        <p className="text-sm text-muted">No rule has run yet.</p>
+                        <p className="text-sm text-muted">{t('dash.noRuns')}</p>
                     ) : (
                         <ul className="flex flex-col divide-y divide-line">
                             {data.recentRuns.map((run) => {
@@ -49,9 +51,9 @@ export default function Dashboard() {
                                 return (
                                     <li key={run.id} className="flex items-center justify-between gap-3 py-3">
                                         <div className="min-w-0">
-                                            <div className="truncate text-sm font-medium">{rule?.name ?? 'Deleted rule'}</div>
+                                            <div className="truncate text-sm font-medium">{rule?.name ?? t('runs.deletedRule')}</div>
                                             <div className="font-mono text-xs text-muted">
-                                                {run.archived} archived · {run.deleted} deleted · {relativeTime(run.startedAt)}
+                                                {t('dash.runLine', { a: run.archived, d: run.deleted })} · {relativeTime(run.startedAt)}
                                             </div>
                                         </div>
                                         <RunBadge status={run.status} />
@@ -63,14 +65,14 @@ export default function Dashboard() {
                 </Card>
 
                 <Card className="p-6">
-                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Mailboxes</h2>
+                    <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">{t('nav.mailboxes')}</h2>
                     {data.sources.length === 0 ? (
                         <EmptyState
-                            title="No mailbox yet"
-                            description="Connect an IMAP mailbox to start archiving."
+                            title={t('dash.noMailbox')}
+                            description={t('dash.noMailboxDesc')}
                             action={
                                 <Link to="/sources" className="text-sm font-medium text-accent hover:underline">
-                                    Add a mailbox →
+                                    {t('dash.addMailboxLink')}
                                 </Link>
                             }
                         />
@@ -106,7 +108,8 @@ function Stat({ label, value, sub, accent = false }: { label: string; value: str
 }
 
 function RunBadge({ status }: { status: 'running' | 'success' | 'error' }) {
-    if (status === 'running') return <Badge tone="accent">running</Badge>;
-    if (status === 'error') return <Badge tone="danger">error</Badge>;
-    return <Badge tone="teal">done</Badge>;
+    const { t } = useI18n();
+    if (status === 'running') return <Badge tone="accent">{t('run.running')}</Badge>;
+    if (status === 'error') return <Badge tone="danger">{t('run.error')}</Badge>;
+    return <Badge tone="teal">{t('run.done')}</Badge>;
 }

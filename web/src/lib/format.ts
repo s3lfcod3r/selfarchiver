@@ -1,4 +1,9 @@
-/** Small presentation helpers shared across pages. */
+import { detectLang } from './i18n.js';
+
+/** Small presentation helpers shared across pages. Date/relative output follows
+ *  the active language (read from the same source as the i18n provider). */
+
+const LOCALE: Record<string, string> = { en: 'en-US', de: 'de-DE' };
 
 export function formatBytes(bytes: number | null): string {
     if (bytes === null || bytes === 0) return '0 B';
@@ -9,7 +14,7 @@ export function formatBytes(bytes: number | null): string {
 
 export function formatDate(ms: number | null): string {
     if (!ms) return '—';
-    return new Date(ms).toLocaleString(undefined, {
+    return new Date(ms).toLocaleString(LOCALE[detectLang()], {
         year: 'numeric',
         month: 'short',
         day: '2-digit',
@@ -20,6 +25,7 @@ export function formatDate(ms: number | null): string {
 
 export function relativeTime(ms: number | null): string {
     if (!ms) return '—';
+    const de = detectLang() === 'de';
     const diff = Date.now() - ms;
     const abs = Math.abs(diff);
     const units: [number, string][] = [
@@ -31,23 +37,9 @@ export function relativeTime(ms: number | null): string {
     for (const [unit, label] of units) {
         if (abs >= unit) {
             const value = Math.round(diff / unit);
-            return diff >= 0 ? `${value}${label} ago` : `in ${-value}${label}`;
+            if (diff >= 0) return de ? `vor ${value}${label}` : `${value}${label} ago`;
+            return de ? `in ${-value}${label}` : `in ${-value}${label}`;
         }
     }
-    return 'just now';
+    return de ? 'gerade eben' : 'just now';
 }
-
-const CRON_PRESETS: Record<string, string> = {
-    '0 3 * * *': 'Every day at 03:00',
-    '0 4 * * *': 'Every day at 04:00',
-    '0 3 * * 0': 'Every Sunday at 03:00',
-    '0 3 1 * *': 'On the 1st each month at 03:00',
-    '0 * * * *': 'Every hour',
-    '*/30 * * * *': 'Every 30 minutes',
-};
-
-export function describeCron(cron: string): string {
-    return CRON_PRESETS[cron] ?? cron;
-}
-
-export const CRON_OPTIONS = Object.entries(CRON_PRESETS).map(([value, label]) => ({ value, label }));

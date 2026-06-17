@@ -3,10 +3,12 @@ import { PageHeader } from '../components/Layout.js';
 import { Badge, Button, Card, EmptyState, Input, Select, Spinner } from '../components/ui.js';
 import { api, type ArchivedEmail, type Source } from '../lib/api.js';
 import { formatBytes, formatDate } from '../lib/format.js';
+import { useI18n } from '../lib/i18n.js';
 
 const PAGE = 50;
 
 export default function Archive() {
+    const { t } = useI18n();
     const [sources, setSources] = useState<Source[]>([]);
     const [search, setSearch] = useState('');
     const [sourceId, setSourceId] = useState('');
@@ -30,25 +32,21 @@ export default function Archive() {
 
     // Debounced search whenever the query or source filter changes.
     useEffect(() => {
-        const t = setTimeout(() => query(0, false), 250);
-        return () => clearTimeout(t);
+        const timer = setTimeout(() => query(0, false), 250);
+        return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search, sourceId]);
 
     return (
         <>
-            <PageHeader title="Archive" subtitle={`${total.toLocaleString()} emails stored and searchable.`} />
+            <PageHeader title={t('nav.archive')} subtitle={t('arch.subtitle', { n: total.toLocaleString() })} />
 
             <div className="mb-5 flex flex-wrap gap-3">
                 <div className="min-w-[16rem] flex-1">
-                    <Input
-                        placeholder="Search subject, sender, recipient, body…"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
+                    <Input placeholder={t('arch.searchPh')} value={search} onChange={(e) => setSearch(e.target.value)} />
                 </div>
                 <Select value={sourceId} onChange={(e) => setSourceId(e.target.value)} className="max-w-[16rem]">
-                    <option value="">All mailboxes</option>
+                    <option value="">{t('arch.allMailboxes')}</option>
                     {sources.map((s) => (
                         <option key={s.id} value={s.id}>
                             {s.name}
@@ -58,10 +56,7 @@ export default function Archive() {
             </div>
 
             {items.length === 0 && !loading ? (
-                <EmptyState
-                    title="Nothing here yet"
-                    description="Once a rule archives mail, it shows up here — full-text searchable, downloadable as .eml."
-                />
+                <EmptyState title={t('arch.nothing')} description={t('arch.nothingDesc')} />
             ) : (
                 <Card className="overflow-hidden">
                     <ul className="divide-y divide-line">
@@ -69,11 +64,11 @@ export default function Archive() {
                             <li key={email.id} className="flex items-center gap-4 px-5 py-3.5">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
-                                        <span className="truncate text-sm font-medium">{email.subject || '(no subject)'}</span>
+                                        <span className="truncate text-sm font-medium">{email.subject || t('arch.noSubject')}</span>
                                         {email.hasAttachments && <Badge tone="accent">📎 {email.attachmentNames.length}</Badge>}
                                     </div>
                                     <div className="truncate font-mono text-xs text-muted">
-                                        {email.fromAddr || 'unknown'} · {email.folder}
+                                        {email.fromAddr || t('arch.unknown')} · {email.folder}
                                     </div>
                                 </div>
                                 <div className="hidden text-right font-mono text-xs text-muted sm:block">
@@ -89,7 +84,7 @@ export default function Archive() {
                     {items.length < total && (
                         <div className="flex justify-center border-t border-line p-4">
                             <Button onClick={() => query(items.length, true)} disabled={loading}>
-                                {loading ? <Spinner /> : `Load more (${total - items.length} left)`}
+                                {loading ? <Spinner /> : t('arch.loadMore', { n: total - items.length })}
                             </Button>
                         </div>
                     )}
