@@ -4,6 +4,23 @@ import { Badge, Button, Card, EmptyState, Input, Modal, Select, Spinner } from '
 import { api, type ArchivedEmail, type Source } from '../lib/api.js';
 import { formatBytes, formatDate } from '../lib/format.js';
 import { useI18n } from '../lib/i18n.js';
+import { useTheme } from '../lib/theme.js';
+
+/**
+ * Render archived HTML inside a document whose base colours follow the app
+ * theme, so plain emails (no own styling) blend into dark mode instead of
+ * showing a glaring white box. Emails with their own colours keep them.
+ */
+function wrapEmailHtml(html: string, dark: boolean): string {
+    const bg = dark ? '#0d1117' : '#ffffff';
+    const fg = dark ? '#e6edf3' : '#111827';
+    const link = dark ? '#2dd4bf' : '#0f766e';
+    return `<!doctype html><html><head><meta charset="utf-8"><style>
+        html,body{margin:0;padding:14px;background:${bg};color:${fg};
+            font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5;}
+        a{color:${link};} img{max-width:100%;height:auto;}
+    </style></head><body>${html}</body></html>`;
+}
 
 const PAGE = 50;
 
@@ -148,6 +165,7 @@ export default function Archive() {
 
 function EmailViewer({ email, onClose }: { email: ArchivedEmail; onClose: () => void }) {
     const { t } = useI18n();
+    const { theme } = useTheme();
     const [content, setContent] = useState<Awaited<ReturnType<typeof api.emailContent>> | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [mode, setMode] = useState<'text' | 'html'>('text');
@@ -214,9 +232,9 @@ function EmailViewer({ email, onClose }: { email: ArchivedEmail; onClose: () => 
                             // Sandboxed (no scripts) so archived HTML can't run anything.
                             <iframe
                                 sandbox=""
-                                srcDoc={content.html}
+                                srcDoc={wrapEmailHtml(content.html, theme === 'dark')}
                                 title="email"
-                                className="h-[55vh] w-full rounded-lg border border-line bg-white"
+                                className="h-[55vh] w-full rounded-lg border border-line bg-surface"
                             />
                         ) : (
                             <pre className="max-h-[55vh] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-line bg-paper/40 p-3 text-sm">
