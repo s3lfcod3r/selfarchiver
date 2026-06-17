@@ -64,10 +64,13 @@ export function normalizeHostPort(hostInput: string, portInput: number): { host:
 
 export function createClient(conn: ImapConnection): ImapFlow {
     const { host, port } = normalizeHostPort(conn.host, conn.port);
+    // Port 993 is implicit TLS (IMAPS) by definition — always use TLS there,
+    // even if the stored flag says otherwise, to avoid plaintext-on-993 hangs.
+    const secure = conn.secure || port === 993;
     return new ImapFlow({
         host,
         port,
-        secure: conn.secure,
+        secure,
         auth: { user: conn.user, pass: conn.pass },
         logger: false,
         emitLogs: false,
