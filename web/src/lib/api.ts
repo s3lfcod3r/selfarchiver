@@ -206,6 +206,12 @@ export const api = {
         }>(`/emails/${id}/content`),
     downloadUrl: (id: string) => `/api/emails/${id}/download`,
     attachmentUrl: (id: string, index: number) => `/api/emails/${id}/attachment/${index}`,
+    deleteEmail: (id: string) => request<{ ok: boolean }>(`/emails/${id}`, { method: 'DELETE' }),
+    deleteFolder: (folder: string, sourceId?: string) =>
+        request<{ deleted: number }>('/emails/delete-folder', {
+            method: 'POST',
+            body: JSON.stringify({ folder, sourceId }),
+        }),
 
     listRuns: (ruleId?: string) =>
         request<{ runs: Run[] }>(`/runs${ruleId ? `?ruleId=${ruleId}` : ''}`).then((r) => r.runs),

@@ -1,10 +1,17 @@
 import { createReadStream } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { readFile, unlink } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { simpleParser } from 'mailparser';
 import { env } from '../env.js';
-import { distinctFolders, getEmail, queryEmails } from '../repos/emails.js';
+import {
+    deleteArchivedEmail,
+    deleteEmailsInFolder,
+    distinctFolders,
+    emailsInFolder,
+    getEmail,
+    queryEmails,
+} from '../repos/emails.js';
 
 function safeArchivePath(emlPath: string): string | null {
     const abs = resolve(env.archiveDir, emlPath);
@@ -116,5 +123,28 @@ export function registerArchiveRoutes(app: FastifyInstance): void {
         } catch (err) {
             return reply.code(500).send({ error: err instanceof Error ? err.message : 'Failed to read attachment' });
         }
+    });
+
+    // Delete a single archived email (row + .eml file).
+    app.delete('/api/emails/:id', async (req, reply) => {
+        const { id } = req.params as { id: string };
+        const email = getEmail(id);
+        if (!email) return reply.code(404).send({ error: 'Email not found' });
+        const absPath = safeArchivePath(email.emlPath);
+        if (absPath) await unlink(absPath).catch(() => undefined);
+        deleteArchivedEmail(id);
+        return { ok: true };
+    });
+
+    // Delete every archived email in a folder (optionally scoped to one mailbox).
+    app.post('/api/emails/delete-folder', async (req, reply) => {
+        const { folder, sourceId } = (req.body ?? {}) as { folder?: string; sourceId?: string };
+        if (!folder) return reply.code(400).send({ error: 'folder required' });
+        for (const e of emailsInFolder(folder, sourceId)) {
+            const absPath = safeArchivePath(e.emlPath);
+            if (absPath) await unlink(absPath).catch(() => undefined);
+        }
+        const deleted = deleteEmailsInFolder(folder, sourceId);
+        return { deleted };
     });
 }

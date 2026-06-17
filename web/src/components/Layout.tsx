@@ -6,7 +6,9 @@ import { useTheme } from '../lib/theme.js';
 
 /** App shell: branded, collapsible sidebar + routed content area. */
 
-const APP_VERSION = 'v0.1.0';
+const APP_VERSION = 'v1.0';
+const WEBSITE_URL = 'https://selfcoder.de';
+const REPO_URL = 'https://github.com/kabelsalatundklartext/selfarchiver';
 
 const NAV: { to: string; key: string; icon: ReactNode }[] = [
     { to: '/', key: 'nav.overview', icon: <IconGrid /> },
@@ -72,7 +74,7 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                             onClick={() => setMobileOpen(false)}
                             className={({ isActive }) =>
                                 `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                                    isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-line/40 hover:text-ink'
+                                    isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-accent-soft hover:text-accent'
                                 }`
                             }
                         >
@@ -85,10 +87,18 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                         <LanguageToggle />
                         <span className="ml-auto font-mono text-[10px] text-muted">SelfArchiver {APP_VERSION}</span>
                     </div>
+                    <div className="flex items-center gap-3 px-1 text-[10px] text-muted">
+                        <a href={WEBSITE_URL} target="_blank" rel="noreferrer" className="hover:text-accent">
+                            Website
+                        </a>
+                        <a href={REPO_URL} target="_blank" rel="noreferrer" className="hover:text-accent">
+                            GitHub
+                        </a>
+                    </div>
                     {authRequired && (
                         <button
                             onClick={() => void api.logout().then(() => window.location.reload())}
-                            className="mt-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:bg-line/40 hover:text-ink"
+                            className="mt-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:bg-accent-soft hover:text-accent"
                         >
                             <IconLogout /> {t('action.signOut')}
                         </button>
@@ -129,7 +139,7 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                             className={({ isActive }) =>
                                 `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                                     collapsed ? 'md:justify-center md:px-0' : ''
-                                } ${isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-line/40 hover:text-ink'}`
+                                } ${isActive ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-accent-soft hover:text-accent'}`
                             }
                         >
                             <span className="shrink-0">{item.icon}</span>
@@ -144,10 +154,18 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                         <LanguageToggle />
                     </div>
                     <div className={`px-1 font-mono text-[10px] text-muted ${hideWhenCollapsed}`}>SelfArchiver {APP_VERSION}</div>
+                    <div className={`flex items-center gap-3 px-1 text-[10px] text-muted ${hideWhenCollapsed}`}>
+                        <a href={WEBSITE_URL} target="_blank" rel="noreferrer" className="hover:text-accent">
+                            Website
+                        </a>
+                        <a href={REPO_URL} target="_blank" rel="noreferrer" className="hover:text-accent">
+                            GitHub
+                        </a>
+                    </div>
                     {authRequired && (
                         <button
                             onClick={() => void api.logout().then(() => window.location.reload())}
-                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:bg-line/40 hover:text-ink ${
+                            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:bg-accent-soft hover:text-accent ${
                                 collapsed ? 'md:justify-center md:px-0' : ''
                             }`}
                             title={t('action.signOut')}

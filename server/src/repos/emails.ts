@@ -187,6 +187,27 @@ export function deleteArchivedEmail(id: string): void {
     db.prepare('DELETE FROM archived_emails WHERE id = ?').run(id);
 }
 
+/** The id + on-disk path of every archived email in a folder (optionally one source). */
+export function emailsInFolder(folder: string, sourceId?: string): { id: string; emlPath: string }[] {
+    const rows = sourceId
+        ? (db
+              .prepare('SELECT id, eml_path AS emlPath FROM archived_emails WHERE folder = ? AND source_id = ?')
+              .all(folder, sourceId) as { id: string; emlPath: string }[])
+        : (db.prepare('SELECT id, eml_path AS emlPath FROM archived_emails WHERE folder = ?').all(folder) as {
+              id: string;
+              emlPath: string;
+          }[]);
+    return rows;
+}
+
+/** Bulk-delete all archived emails in a folder (FTS rows dropped via trigger). */
+export function deleteEmailsInFolder(folder: string, sourceId?: string): number {
+    const info = sourceId
+        ? db.prepare('DELETE FROM archived_emails WHERE folder = ? AND source_id = ?').run(folder, sourceId)
+        : db.prepare('DELETE FROM archived_emails WHERE folder = ?').run(folder);
+    return info.changes;
+}
+
 export function emailStats(): { total: number; totalSize: number; bySource: { sourceId: string; count: number }[] } {
     const total = (db.prepare('SELECT COUNT(*) AS c FROM archived_emails').get() as { c: number }).c;
     const totalSize = (db.prepare('SELECT COALESCE(SUM(size),0) AS s FROM archived_emails').get() as { s: number }).s;

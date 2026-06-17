@@ -86,6 +86,18 @@ export default function Archive() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [search, sourceId, folder, fromDate, toDate]);
 
+    const removeEmail = async (email: ArchivedEmail) => {
+        if (!confirm(t('arch.deleteConfirm'))) return;
+        await api.deleteEmail(email.id);
+        query(0, false);
+    };
+
+    const removeFolder = async () => {
+        if (!folder || !confirm(t('arch.deleteFolderConfirm', { folder }))) return;
+        await api.deleteFolder(folder, sourceId || undefined);
+        setFolder(''); // resets selection and triggers a reload via the effect
+    };
+
     return (
         <>
             <PageHeader title={t('nav.archive')} subtitle={t('arch.subtitle', { n: total.toLocaleString() })} />
@@ -117,6 +129,11 @@ export default function Archive() {
                         {t('arch.to')}
                         <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="w-auto" />
                     </label>
+                    {folder && (
+                        <Button variant="danger" onClick={() => void removeFolder()}>
+                            {t('arch.deleteFolder')}
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -145,6 +162,14 @@ export default function Archive() {
                                 <a href={api.downloadUrl(email.id)} className="text-sm font-medium text-accent hover:underline">
                                     .eml
                                 </a>
+                                <button
+                                    onClick={() => void removeEmail(email)}
+                                    className="text-muted transition-colors hover:text-danger"
+                                    title={t('arch.delete')}
+                                    aria-label={t('arch.delete')}
+                                >
+                                    🗑
+                                </button>
                             </li>
                         ))}
                     </ul>
