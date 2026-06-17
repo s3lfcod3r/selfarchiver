@@ -29,7 +29,12 @@ export interface EnvelopeSummary {
     hasAttachment: boolean;
 }
 
-const CONNECT_TIMEOUT_MS = 20000;
+const CONNECT_TIMEOUT_MS = 45000;
+const CONNECT_ATTEMPTS = 3;
+
+function delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * A host field must not carry a `:port` (people often paste `host:5000`, the
@@ -73,19 +78,42 @@ export function createClient(conn: ImapConnection): ImapFlow {
     });
 }
 
-/** Connect, run `fn`, and always log out afterwards. */
+/**
+ * Connect, run `fn`, and always log out afterwards. The connect step is retried
+ * a few times: slow mail servers (e.g. Synology MailPlus) occasionally miss the
+ * greeting window or briefly refuse rapid reconnects, which is transient.
+ */
 export async function withClient<T>(conn: ImapConnection, fn: (client: ImapFlow) => Promise<T>): Promise<T> {
-    const client = createClient(conn);
-    await client.connect();
-    try {
-        return await fn(client);
-    } finally {
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= CONNECT_ATTEMPTS; attempt++) {
+        const client = createClient(conn);
         try {
-            await client.logout();
-        } catch {
-            // best-effort close; nothing actionable if logout fails
+            await client.connect();
+        } catch (err) {
+            lastError = err;
+            try {
+                client.close();
+            } catch {
+                // ignore
+            }
+            if (attempt < CONNECT_ATTEMPTS) {
+                await delay(1500 * attempt);
+                continue;
+            }
+            throw err;
+        }
+
+        try {
+            return await fn(client);
+        } finally {
+            try {
+                await client.logout();
+            } catch {
+                // best-effort close; nothing actionable if logout fails
+            }
         }
     }
+    throw lastError;
 }
 
 /** Verify credentials by connecting and immediately logging out. */
