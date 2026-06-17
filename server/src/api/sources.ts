@@ -94,6 +94,35 @@ export function registerSourceRoutes(app: FastifyInstance): void {
         return { ok: true };
     });
 
+    // Test arbitrary (unsaved) credentials straight from the form. On edit, an
+    // empty password falls back to the stored one (via the optional id).
+    app.post('/api/sources/test-connection', async (req, reply) => {
+        const b = (req.body ?? {}) as {
+            id?: string;
+            host?: string;
+            port?: number;
+            secure?: boolean;
+            allowSelfSigned?: boolean;
+            username?: string;
+            password?: string;
+        };
+        if (!b.host || !b.username) return reply.code(400).send({ ok: false, error: 'Host and username required' });
+        let pass = b.password ?? '';
+        if (!pass && b.id) {
+            const enc = getSourcePasswordEnc(b.id);
+            if (enc) pass = decryptSecret(enc);
+        }
+        if (!pass) return reply.code(400).send({ ok: false, error: 'Password required' });
+        return safeTest({
+            host: b.host,
+            port: Number(b.port) || 993,
+            secure: b.secure !== false,
+            allowSelfSigned: Boolean(b.allowSelfSigned),
+            user: b.username,
+            pass,
+        });
+    });
+
     app.post('/api/sources/:id/test', async (req, reply) => {
         const { id } = req.params as { id: string };
         const conn = connFromSource(id);

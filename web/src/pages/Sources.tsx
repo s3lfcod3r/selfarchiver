@@ -133,9 +133,24 @@ function SourceModal({
     const [values, setValues] = useState<SourceFormValues>(initial);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [testing, setTesting] = useState(false);
+    const [testMsg, setTestMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
     const set = <K extends keyof SourceFormValues>(key: K, value: SourceFormValues[K]) =>
         setValues((v) => ({ ...v, [key]: value }));
+
+    const testConnection = async () => {
+        setTesting(true);
+        setTestMsg(null);
+        try {
+            const r = await api.testConnection({ ...values, id: id ?? undefined });
+            setTestMsg({ ok: r.ok, text: r.ok ? t('sources.testOk') : t('sources.testFailed', { error: r.error ?? '' }) });
+        } catch (err) {
+            setTestMsg({ ok: false, text: err instanceof Error ? err.message : t('form.failedSave') });
+        } finally {
+            setTesting(false);
+        }
+    };
 
     const save = async () => {
         setBusy(true);
@@ -161,6 +176,9 @@ function SourceModal({
             onClose={onClose}
             footer={
                 <>
+                    <Button className="mr-auto" onClick={() => void testConnection()} disabled={testing}>
+                        {testing ? <Spinner /> : t('form.testConnection')}
+                    </Button>
                     <Button onClick={onClose}>{t('common.cancel')}</Button>
                     <Button variant="primary" onClick={() => void save()} disabled={busy}>
                         {busy ? <Spinner /> : t('form.saveTest')}
@@ -191,6 +209,7 @@ function SourceModal({
                 <Field label={t('form.password')} hint={id ? t('form.passwordHintEdit') : t('form.passwordHintNew')}>
                     <Input type="password" value={values.password ?? ''} onChange={(e) => set('password', e.target.value)} />
                 </Field>
+                {testMsg && <p className={`text-sm ${testMsg.ok ? 'text-teal' : 'text-danger'}`}>{testMsg.text}</p>}
                 {error && <p className="text-sm text-danger">{error}</p>}
             </div>
         </Modal>

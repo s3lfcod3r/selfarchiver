@@ -154,6 +154,11 @@ export const api = {
         }),
     deleteSource: (id: string) => request<{ ok: boolean }>(`/sources/${id}`, { method: 'DELETE' }),
     testSource: (id: string) => request<{ ok: boolean; error: string | null }>(`/sources/${id}/test`, { method: 'POST' }),
+    testConnection: (body: SourceFormValues & { id?: string }) =>
+        request<{ ok: boolean; error: string | null }>('/sources/test-connection', {
+            method: 'POST',
+            body: JSON.stringify(body),
+        }),
     folders: (id: string) => request<{ folders: MailboxFolder[] }>(`/sources/${id}/folders`).then((r) => r.folders),
 
     listRules: () => request<{ rules: Rule[] }>('/rules').then((r) => r.rules),

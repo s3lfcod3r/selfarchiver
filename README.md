@@ -4,6 +4,8 @@
 
 <p align="center">Self-hosted email archiver that keeps your mailbox <strong>small</strong> and your mail <strong>safe</strong> — with the controls other archivers are missing.</p>
 
+<p align="center"><strong>English</strong> · <a href="README.de.md">Deutsch</a></p>
+
 ---
 
 Most archivers can only mirror a whole account. SelfArchiver is built around four things they don't do:
