@@ -111,6 +111,11 @@ export async function withClient<T>(conn: ImapConnection, fn: (client: ImapFlow)
             } catch {
                 // best-effort close; nothing actionable if logout fails
             }
+            try {
+                client.close();
+            } catch {
+                // ensure the socket is released so we don't exhaust server slots
+            }
         }
     }
     throw lastError;

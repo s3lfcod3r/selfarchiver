@@ -37,6 +37,7 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
     let scanned = 0;
     let archived = 0;
     let deleted = 0;
+    let connInfo = '';
 
     try {
         const source = getSource(rule.sourceId);
@@ -52,6 +53,7 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
             user: source.username,
             pass: decryptSecret(passwordEnc),
         };
+        connInfo = ` [${conn.host}:${conn.port} TLS=${conn.secure} self-signed=${conn.allowSelfSigned}]`;
         const unitMs = rule.minAgeUnit === 'hours' ? HOUR_MS : DAY_MS;
         const before = new Date(Date.now() - rule.minAge * unitMs);
 
@@ -111,7 +113,7 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
         finishRun(run.id, { status: 'success', scanned, archived, deleted, error: null });
         logger.info({ ruleId: rule.id, scanned, archived, deleted }, 'rule run finished');
     } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+        const message = (err instanceof Error ? err.message : String(err)) + connInfo;
         if (rule.sourceId) setSourceStatus(rule.sourceId, 'error', message);
         finishRun(run.id, { status: 'error', scanned, archived, deleted, error: message });
         logger.error({ ruleId: rule.id, err: message }, 'rule run failed');
