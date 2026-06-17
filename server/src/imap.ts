@@ -180,12 +180,14 @@ function formatAddress(list: { name?: string; address?: string }[] | undefined):
 export async function* fetchEnvelopes(
     client: ImapFlow,
     folder: string,
-    before: Date,
+    cutoffMs: number,
     seenOnly: boolean,
 ): AsyncGenerator<EnvelopeSummary> {
     const lock = await client.getMailboxLock(folder);
     try {
-        const search: Record<string, unknown> = { before };
+        // IMAP BEFORE is date-granular and exclusive, so add a day to avoid
+        // dropping same-day mail; the runner then filters by exact timestamp.
+        const search: Record<string, unknown> = { before: new Date(cutoffMs + 86400000) };
         if (seenOnly) search.seen = true;
         for await (const msg of client.fetch(search, {
             uid: true,

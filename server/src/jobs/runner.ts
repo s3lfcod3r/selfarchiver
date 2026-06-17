@@ -55,7 +55,7 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
         };
         connInfo = ` [${conn.host}:${conn.port} TLS=${conn.secure} self-signed=${conn.allowSelfSigned}]`;
         const unitMs = rule.minAgeUnit === 'hours' ? HOUR_MS : DAY_MS;
-        const before = new Date(Date.now() - rule.minAge * unitMs);
+        const cutoff = Date.now() - rule.minAge * unitMs;
 
         await withClient(conn, async (client) => {
             // Optionally expand the selected folders with any (new) subfolders,
@@ -77,7 +77,7 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
             for (const folder of folders) {
                 // First pass: collect light envelope summaries (lock released when done).
                 const summaries: EnvelopeSummary[] = [];
-                for await (const env of fetchEnvelopes(client, folder, before, rule.filter.seenOnly)) {
+                for await (const env of fetchEnvelopes(client, folder, cutoff, rule.filter.seenOnly)) {
                     summaries.push(env);
                 }
                 scanned += summaries.length;
@@ -85,6 +85,8 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
                 // Second pass: archive matches, then delete the confirmed-archived ones.
                 const toDelete: number[] = [];
                 for (const env of summaries) {
+                    // Exact age check (IMAP BEFORE is only day-granular; supports hours).
+                    if (env.date != null && env.date > cutoff) continue;
                     if (!matchesFilter(env, rule.filter)) continue;
                     const raw = await fetchSource(client, folder, env.uid);
                     if (!raw) continue;
