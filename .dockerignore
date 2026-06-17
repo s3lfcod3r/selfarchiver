@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.github
+data
+*.sqlite
+*.sqlite-*
+.env
+.env.*
+*.log
+docs
+unraid

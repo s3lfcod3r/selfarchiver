@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# build output
+dist/
+web/dist/
+server/dist/
+*.tsbuildinfo
+
+# runtime data (archives, sqlite db, secrets)
+data/
+*.sqlite
+*.sqlite-*
+*.db
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+
+# logs
+logs/
+*.log
+npm-debug.log*
+
+# editor / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

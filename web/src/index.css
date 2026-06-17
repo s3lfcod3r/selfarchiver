@@ -1,0 +1,62 @@
+@import 'tailwindcss';
+
+/*
+ * Design direction: "archival console" — warm paper ground, ink text, an
+ * amber accent borrowed from manila folders, teal for healthy/success states.
+ * Monospace is used for data (counts, schedules, addresses) to give the UI a
+ * deliberate, technical character instead of a generic dashboard look.
+ */
+@theme {
+    --color-paper: #f7f3ec;
+    --color-surface: #fffdf9;
+    --color-ink: #1c1a17;
+    --color-muted: #6f675c;
+    --color-line: #e4dccd;
+    --color-accent: #c2410c;
+    --color-accent-soft: #f3e2d3;
+    --color-teal: #0f766e;
+    --color-teal-soft: #d6ece9;
+    --color-danger: #b91c1c;
+    --color-danger-soft: #f6dada;
+
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, monospace;
+
+    --radius-card: 0.75rem;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle paper grain so large surfaces don't read as flat template white. */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    z-index: 0;
+    background-image: radial-gradient(var(--color-line) 0.5px, transparent 0.5px);
+    background-size: 22px 22px;
+}
+
+#root {
+    position: relative;
+    z-index: 1;
+}
+
+::selection {
+    background: var(--color-accent);
+    color: white;
+}

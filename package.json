@@ -1,0 +1,22 @@
+{
+    "name": "selfarchiver",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Self-hosted email archiver with selective folder archiving, rule-based filters, per-rule schedules and archive-then-delete retention.",
+    "license": "MIT",
+    "workspaces": [
+        "server",
+        "web"
+    ],
+    "scripts": {
+        "dev": "npm run dev --workspace=server",
+        "dev:web": "npm run dev --workspace=web",
+        "build": "npm run build --workspace=web && npm run build --workspace=server",
+        "start": "npm run start --workspace=server",
+        "typecheck": "npm run typecheck --workspace=server && npm run typecheck --workspace=web",
+        "db:generate": "npm run db:generate --workspace=server"
+    },
+    "engines": {
+        "node": ">=20"
+    }
+}

@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>SelfArchiver</Name>
+  <Repository>ghcr.io/kabelsalatundklartext/selfarchiver:latest</Repository>
+  <Registry>https://ghcr.io/kabelsalatundklartext/selfarchiver</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support/>
+  <Project>https://github.com/kabelsalatundklartext/selfarchiver</Project>
+  <Overview>Self-hosted email archiver with the features other archivers lack: pick exactly which IMAP folders to archive, build rules with filters (sender / subject / attachment / age), give each rule its own schedule, and optionally delete archived mail from the source mailbox to keep it small. Everything is stored in a single container (SQLite + full-text search + .eml files on disk). No external database required.</Overview>
+  <Category>Productivity: MailServer: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:3000]/</WebUI>
+  <TemplateURL/>
+  <Icon>https://raw.githubusercontent.com/kabelsalatundklartext/selfarchiver/main/assets/icon.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled/>
+  <DonateText/>
+  <DonateLink/>
+  <Description>Self-hosted email archiver: selective per-folder archiving, rule-based filters, per-rule schedules and archive-then-delete retention. Single container, SQLite-backed, no external services.</Description>
+  <Networking>
+    <Mode>bridge</Mode>
+    <Publish>
+      <Port>
+        <HostPort>3000</HostPort>
+        <ContainerPort>3000</ContainerPort>
+        <Protocol>tcp</Protocol>
+      </Port>
+    </Publish>
+  </Networking>
+  <Data>
+    <Volume>
+      <HostDir>/mnt/user/appdata/selfarchiver</HostDir>
+      <ContainerDir>/data</ContainerDir>
+      <Mode>rw</Mode>
+    </Volume>
+  </Data>
+  <Config Name="WebUI Port" Target="3000" Default="3000" Mode="tcp" Description="Web interface port" Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+  <Config Name="Data" Target="/data" Default="/mnt/user/appdata/selfarchiver" Mode="rw" Description="SQLite database and the .eml archive" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/selfarchiver</Config>
+  <Config Name="APP_SECRET" Target="APP_SECRET" Default="" Mode="" Description="Stable secret for encrypting stored mailbox passwords and signing sessions. Generate with: openssl rand -hex 32. Keep it constant!" Type="Variable" Display="always" Required="true" Mask="true"/>
+  <Config Name="AUTH_PASSWORD" Target="AUTH_PASSWORD" Default="" Mode="" Description="Optional password to protect the web UI. Leave empty for an open instance on a trusted network." Type="Variable" Display="always" Required="false" Mask="true"/>
+  <Config Name="TZ" Target="TZ" Default="Europe/Berlin" Mode="" Description="Timezone used for per-rule cron schedules." Type="Variable" Display="always" Required="false" Mask="false">Europe/Berlin</Config>
+  <Config Name="LOG_LEVEL" Target="LOG_LEVEL" Default="info" Mode="" Description="Log verbosity: trace, debug, info, warn, error." Type="Variable" Display="advanced" Required="false" Mask="false">info</Config>
+</Container>
