@@ -48,6 +48,7 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
             host: source.host,
             port: source.port,
             secure: source.secure,
+            allowSelfSigned: source.allowSelfSigned,
             user: source.username,
             pass: decryptSecret(passwordEnc),
         };
