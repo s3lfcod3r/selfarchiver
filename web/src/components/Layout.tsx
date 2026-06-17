@@ -47,11 +47,11 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
         <div className="flex min-h-full flex-col md:flex-row">
             <aside
                 className={`flex shrink-0 flex-col border-line md:h-screen md:border-r md:py-6 ${
-                    collapsed ? 'md:w-[4.5rem]' : 'md:w-64'
+                    collapsed ? 'md:w-[4.5rem]' : 'md:w-56'
                 }`}
             >
                 <div className={`flex items-center px-5 py-4 md:px-3 md:py-2 ${collapsed ? 'md:justify-center' : ''}`}>
-                    <img src="/logo-wide.png" alt="SelfArchiver" className={`h-12 w-auto ${hideWhenCollapsed}`} />
+                    <img src="/logo-wide.png" alt="SelfArchiver" className={`h-12 w-auto md:h-auto md:w-full ${hideWhenCollapsed}`} />
                     {collapsed && <img src="/icon.png" alt="SelfArchiver" className="hidden h-8 w-8 md:block" />}
                 </div>
 
