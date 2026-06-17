@@ -13,6 +13,8 @@ export interface ImapConnection {
     secure: boolean;
     user: string;
     pass: string;
+    /** Accept self-signed / untrusted TLS certificates (local mail servers). */
+    allowSelfSigned?: boolean;
 }
 
 export interface EnvelopeSummary {
@@ -40,6 +42,7 @@ export function createClient(conn: ImapConnection): ImapFlow {
         socketTimeout: 120000,
         greetingTimeout: CONNECT_TIMEOUT_MS,
         connectionTimeout: CONNECT_TIMEOUT_MS,
+        tls: { rejectUnauthorized: !conn.allowSelfSigned },
     });
 }
 

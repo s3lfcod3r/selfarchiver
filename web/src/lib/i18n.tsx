@@ -65,6 +65,9 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'form.imapHost': 'IMAP host',
         'form.port': 'Port',
         'form.useTls': 'Use TLS (recommended)',
+        'form.allowSelfSigned': 'Accept self-signed certificate',
+        'form.allowSelfSignedHint':
+            'Enable for local mail servers (e.g. a Synology on your LAN) that use a self-signed or untrusted TLS certificate.',
         'form.username': 'Username',
         'form.password': 'Password',
         'form.passwordHintEdit': 'Leave empty to keep the current password.',
@@ -211,6 +214,9 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'form.imapHost': 'IMAP-Host',
         'form.port': 'Port',
         'form.useTls': 'TLS verwenden (empfohlen)',
+        'form.allowSelfSigned': 'Selbstsigniertes Zertifikat akzeptieren',
+        'form.allowSelfSignedHint':
+            'Für lokale Mailserver (z. B. eine Synology im LAN) mit selbstsigniertem oder nicht vertrauenswürdigem TLS-Zertifikat aktivieren.',
         'form.username': 'Benutzername',
         'form.password': 'Passwort',
         'form.passwordHintEdit': 'Leer lassen, um das aktuelle Passwort zu behalten.',

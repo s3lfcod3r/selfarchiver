@@ -22,6 +22,7 @@ export function initSchema(): void {
             host            TEXT NOT NULL,
             port            INTEGER NOT NULL,
             secure          INTEGER NOT NULL DEFAULT 1,
+            allow_self_signed INTEGER NOT NULL DEFAULT 0,
             username        TEXT NOT NULL,
             password_enc    TEXT NOT NULL,
             status          TEXT NOT NULL DEFAULT 'unknown',
@@ -94,6 +95,17 @@ export function initSchema(): void {
         CREATE INDEX IF NOT EXISTS idx_runs_rule ON runs(rule_id);
         CREATE INDEX IF NOT EXISTS idx_runs_started_at ON runs(started_at);
     `);
+
+    // Lightweight migrations for databases created before a column existed.
+    ensureColumn('sources', 'allow_self_signed', 'INTEGER NOT NULL DEFAULT 0');
+}
+
+/** Add a column to an existing table if it is not already present. */
+function ensureColumn(table: string, column: string, definition: string): void {
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+    if (!columns.some((c) => c.name === column)) {
+        db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    }
 }
 
 // Create the schema at module load. Repositories (e.g. repos/emails.ts) prepare

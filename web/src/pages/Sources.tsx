@@ -5,7 +5,7 @@ import { api, type Source, type SourceFormValues } from '../lib/api.js';
 import { relativeTime } from '../lib/format.js';
 import { useI18n } from '../lib/i18n.js';
 
-const BLANK: SourceFormValues = { name: '', host: '', port: 993, secure: true, username: '', password: '' };
+const BLANK: SourceFormValues = { name: '', host: '', port: 993, secure: true, allowSelfSigned: false, username: '', password: '' };
 
 export default function Sources() {
     const { t } = useI18n();
@@ -87,7 +87,7 @@ export default function Sources() {
                                         onClick={() =>
                                             setEditing({
                                                 id: s.id,
-                                                values: { name: s.name, host: s.host, port: s.port, secure: s.secure, username: s.username, password: '' },
+                                                values: { name: s.name, host: s.host, port: s.port, secure: s.secure, allowSelfSigned: s.allowSelfSigned, username: s.username, password: '' },
                                             })
                                         }
                                     >
@@ -183,6 +183,8 @@ function SourceModal({
                     </Field>
                 </div>
                 <Toggle checked={values.secure} onChange={(v) => set('secure', v)} label={t('form.useTls')} />
+                <Toggle checked={values.allowSelfSigned} onChange={(v) => set('allowSelfSigned', v)} label={t('form.allowSelfSigned')} />
+                <p className="-mt-2 text-xs text-muted">{t('form.allowSelfSignedHint')}</p>
                 <Field label={t('form.username')}>
                     <Input value={values.username} onChange={(e) => set('username', e.target.value)} placeholder="you@example.com" />
                 </Field>

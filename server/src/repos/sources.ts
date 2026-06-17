@@ -10,6 +10,7 @@ interface SourceRow {
     host: string;
     port: number;
     secure: number;
+    allow_self_signed: number;
     username: string;
     password_enc: string;
     status: string;
@@ -26,6 +27,7 @@ function rowToSource(r: SourceRow): Source {
         host: r.host,
         port: r.port,
         secure: r.secure === 1,
+        allowSelfSigned: r.allow_self_signed === 1,
         username: r.username,
         status: r.status as Source['status'],
         lastCheckedAt: r.last_checked_at,
@@ -36,8 +38,8 @@ function rowToSource(r: SourceRow): Source {
 }
 
 const insertStmt = db.prepare(`
-    INSERT INTO sources (id, name, host, port, secure, username, password_enc, status, created_at, updated_at)
-    VALUES (@id, @name, @host, @port, @secure, @username, @password_enc, 'unknown', @now, @now)
+    INSERT INTO sources (id, name, host, port, secure, allow_self_signed, username, password_enc, status, created_at, updated_at)
+    VALUES (@id, @name, @host, @port, @secure, @allow_self_signed, @username, @password_enc, 'unknown', @now, @now)
 `);
 
 export function createSource(input: {
@@ -45,6 +47,7 @@ export function createSource(input: {
     host: string;
     port: number;
     secure: boolean;
+    allowSelfSigned: boolean;
     username: string;
     passwordEnc: string;
 }): Source {
@@ -56,6 +59,7 @@ export function createSource(input: {
         host: input.host,
         port: input.port,
         secure: input.secure ? 1 : 0,
+        allow_self_signed: input.allowSelfSigned ? 1 : 0,
         username: input.username,
         password_enc: input.passwordEnc,
         now,
@@ -65,19 +69,28 @@ export function createSource(input: {
 
 export function updateSource(
     id: string,
-    fields: { name: string; host: string; port: number; secure: boolean; username: string; passwordEnc?: string },
+    fields: {
+        name: string;
+        host: string;
+        port: number;
+        secure: boolean;
+        allowSelfSigned: boolean;
+        username: string;
+        passwordEnc?: string;
+    },
 ): Source | null {
     const existing = db.prepare('SELECT * FROM sources WHERE id = ?').get(id) as SourceRow | undefined;
     if (!existing) return null;
     db.prepare(
-        `UPDATE sources SET name=@name, host=@host, port=@port, secure=@secure, username=@username,
-         password_enc=@password_enc, updated_at=@now WHERE id=@id`,
+        `UPDATE sources SET name=@name, host=@host, port=@port, secure=@secure, allow_self_signed=@allow_self_signed,
+         username=@username, password_enc=@password_enc, updated_at=@now WHERE id=@id`,
     ).run({
         id,
         name: fields.name,
         host: fields.host,
         port: fields.port,
         secure: fields.secure ? 1 : 0,
+        allow_self_signed: fields.allowSelfSigned ? 1 : 0,
         username: fields.username,
         password_enc: fields.passwordEnc ?? existing.password_enc,
         now: Date.now(),

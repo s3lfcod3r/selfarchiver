@@ -6,6 +6,7 @@ export interface Source {
     host: string;
     port: number;
     secure: boolean;
+    allowSelfSigned: boolean;
     username: string;
     status: 'ok' | 'error' | 'unknown';
     lastCheckedAt: number | null;
@@ -181,6 +182,7 @@ export interface SourceFormValues {
     host: string;
     port: number;
     secure: boolean;
+    allowSelfSigned: boolean;
     username: string;
     password?: string;
 }

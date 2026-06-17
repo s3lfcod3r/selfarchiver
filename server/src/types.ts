@@ -13,6 +13,9 @@ export const sourceInputSchema = z.object({
     host: z.string().min(1).max(255),
     port: z.number().int().min(1).max(65535).default(993),
     secure: z.boolean().default(true),
+    // Accept self-signed / untrusted TLS certs (common for local mail servers
+    // like a Synology MailPlus on your LAN).
+    allowSelfSigned: z.boolean().default(false),
     username: z.string().min(1).max(255),
     // Only required on create; on update an empty password keeps the old one.
     password: z.string().max(1024).optional(),
@@ -25,6 +28,7 @@ export interface Source {
     host: string;
     port: number;
     secure: boolean;
+    allowSelfSigned: boolean;
     username: string;
     status: 'ok' | 'error' | 'unknown';
     lastCheckedAt: number | null;

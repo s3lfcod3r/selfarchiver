@@ -18,7 +18,14 @@ function connFromSource(id: string): ImapConnection | null {
     const source = getSource(id);
     const enc = getSourcePasswordEnc(id);
     if (!source || !enc) return null;
-    return { host: source.host, port: source.port, secure: source.secure, user: source.username, pass: decryptSecret(enc) };
+    return {
+        host: source.host,
+        port: source.port,
+        secure: source.secure,
+        allowSelfSigned: source.allowSelfSigned,
+        user: source.username,
+        pass: decryptSecret(enc),
+    };
 }
 
 async function safeTest(conn: ImapConnection): Promise<{ ok: boolean; error: string | null }> {
@@ -44,10 +51,18 @@ export function registerSourceRoutes(app: FastifyInstance): void {
             host: d.host,
             port: d.port,
             secure: d.secure,
+            allowSelfSigned: d.allowSelfSigned,
             username: d.username,
             passwordEnc: encryptSecret(d.password),
         });
-        const test = await safeTest({ host: d.host, port: d.port, secure: d.secure, user: d.username, pass: d.password });
+        const test = await safeTest({
+            host: d.host,
+            port: d.port,
+            secure: d.secure,
+            allowSelfSigned: d.allowSelfSigned,
+            user: d.username,
+            pass: d.password,
+        });
         setSourceStatus(source.id, test.ok ? 'ok' : 'error', test.error);
         return reply.code(201).send({ source: getSource(source.id), connectionOk: test.ok, error: test.error });
     });
@@ -62,6 +77,7 @@ export function registerSourceRoutes(app: FastifyInstance): void {
             host: d.host,
             port: d.port,
             secure: d.secure,
+            allowSelfSigned: d.allowSelfSigned,
             username: d.username,
             passwordEnc: d.password ? encryptSecret(d.password) : undefined,
         });
