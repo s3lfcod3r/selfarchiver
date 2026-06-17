@@ -95,3 +95,9 @@ export function initSchema(): void {
         CREATE INDEX IF NOT EXISTS idx_runs_started_at ON runs(started_at);
     `);
 }
+
+// Create the schema at module load. Repositories (e.g. repos/emails.ts) prepare
+// statements at import time — which runs before main() — so the tables must
+// exist as soon as this module is imported. CREATE ... IF NOT EXISTS keeps this
+// safe and idempotent even though main() also calls initSchema().
+initSchema();
