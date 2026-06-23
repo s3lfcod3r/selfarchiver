@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { sign, unsign } from '../crypto.js';
 import { env } from '../env.js';
@@ -7,10 +7,40 @@ import { env } from '../env.js';
  * Optional single-admin authentication. When AUTH_PASSWORD is set, every /api
  * route (except the auth/health endpoints) requires a valid signed session
  * cookie. When it is empty the API is left open for trusted private networks.
+ *
+ * Sessions are random, server-side tokens: the cookie only carries an opaque
+ * (HMAC-signed) session id, the actual session lives in memory. This makes a
+ * session revocable (logout drops it) and ensures it does not survive a
+ * restart — a leaked cookie cannot be replayed forever.
  */
 
 const COOKIE = 'sa_session';
 const OPEN_PATHS = new Set(['/api/login', '/api/logout', '/api/session', '/api/health']);
+
+const SESSION_TTL_MS = 60 * 60 * 24 * 30 * 1000; // 30 days
+/** Active sessions: opaque id → expiry (epoch ms). In memory only, by design. */
+const sessions = new Map<string, number>();
+
+function createSession(): string {
+    const id = randomBytes(32).toString('base64url');
+    sessions.set(id, Date.now() + SESSION_TTL_MS);
+    return id;
+}
+
+function sessionValid(id: string): boolean {
+    const expiresAt = sessions.get(id);
+    if (expiresAt == null) return false;
+    if (Date.now() > expiresAt) {
+        sessions.delete(id);
+        return false;
+    }
+    return true;
+}
+
+function sessionIdFromCookie(cookie: string | undefined): string | null {
+    if (!cookie) return null;
+    return unsign(cookie);
+}
 
 // Simple in-memory brute-force guard for the login endpoint.
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
@@ -28,6 +58,19 @@ function loginRateLimited(ip: string): boolean {
     return rec.count > LOGIN_MAX_ATTEMPTS;
 }
 
+/** Periodically evict expired sessions and stale rate-limit buckets. */
+function startCleanup(): void {
+    const timer = setInterval(
+        () => {
+            const now = Date.now();
+            for (const [id, expiresAt] of sessions) if (now > expiresAt) sessions.delete(id);
+            for (const [ip, rec] of loginAttempts) if (now > rec.resetAt) loginAttempts.delete(ip);
+        },
+        60 * 60 * 1000, // hourly
+    );
+    timer.unref(); // never keep the process alive just for housekeeping
+}
+
 function passwordMatches(input: string): boolean {
     const a = Buffer.from(input);
     const b = Buffer.from(env.authPassword);
@@ -35,10 +78,13 @@ function passwordMatches(input: string): boolean {
 }
 
 function isAuthenticated(cookie: string | undefined): boolean {
-    return Boolean(cookie && unsign(cookie) === 'ok');
+    const id = sessionIdFromCookie(cookie);
+    return Boolean(id && sessionValid(id));
 }
 
 export function registerAuth(app: FastifyInstance): void {
+    startCleanup();
+
     app.addHook('preHandler', async (req, reply) => {
         if (!env.authPassword) return;
         const path = req.url.split('?')[0];
@@ -58,7 +104,7 @@ export function registerAuth(app: FastifyInstance): void {
             return reply.code(401).send({ error: 'Invalid password' });
         }
         loginAttempts.delete(req.ip); // reset on success
-        reply.setCookie(COOKIE, sign('ok'), {
+        reply.setCookie(COOKIE, sign(createSession()), {
             httpOnly: true,
             secure: env.cookieSecure,
             sameSite: 'lax',
@@ -68,7 +114,9 @@ export function registerAuth(app: FastifyInstance): void {
         return { authenticated: true };
     });
 
-    app.post('/api/logout', async (_req, reply) => {
+    app.post('/api/logout', async (req, reply) => {
+        const id = sessionIdFromCookie(req.cookies?.[COOKIE]);
+        if (id) sessions.delete(id);
         reply.clearCookie(COOKIE, { path: '/' });
         return { ok: true };
     });

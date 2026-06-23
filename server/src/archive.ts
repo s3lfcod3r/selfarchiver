@@ -18,9 +18,13 @@ export interface ArchiveResult {
     id?: string;
 }
 
-function dedupeKey(sourceId: string, messageId: string | null, raw: Buffer): string {
+// The folder is part of the key on purpose: the same Message-ID can live in two
+// folders (e.g. a Gmail label + All Mail). Scoping per folder means every folder
+// copy gets its own archived row + .eml, so an `archive_delete` rule never
+// removes a folder's copy on the strength of a different folder's archive.
+function dedupeKey(sourceId: string, folder: string, messageId: string | null, raw: Buffer): string {
     const basis = messageId && messageId.length > 0 ? messageId : createHash('sha256').update(raw).digest('hex');
-    return createHash('sha256').update(`${sourceId}:${basis}`).digest('hex');
+    return createHash('sha256').update(`${sourceId}:${folder}:${basis}`).digest('hex');
 }
 
 function safeSegment(value: string): string {
@@ -35,7 +39,7 @@ export async function archiveMessage(params: {
     raw: Buffer;
 }): Promise<ArchiveResult> {
     const { sourceId, ruleId, folder, envelope, raw } = params;
-    const key = dedupeKey(sourceId, envelope.messageId, raw);
+    const key = dedupeKey(sourceId, folder, envelope.messageId, raw);
     if (emailExists(key)) {
         return { archived: false, reason: 'duplicate' };
     }

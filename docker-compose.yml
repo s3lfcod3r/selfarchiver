@@ -14,6 +14,9 @@ services:
             APP_SECRET: ${APP_SECRET:-}
             # Optional: protect the UI with a single password. Leave empty for an open instance.
             AUTH_PASSWORD: ${AUTH_PASSWORD:-}
+            # Set to "true" when served over HTTPS (e.g. behind a TLS proxy) so the
+            # session cookie carries the Secure flag.
+            COOKIE_SECURE: ${COOKIE_SECURE:-false}
             # Timezone used to evaluate per-rule cron schedules.
             TZ: ${TZ:-Europe/Berlin}
             CRON_TZ: ${CRON_TZ:-${TZ:-Europe/Berlin}}

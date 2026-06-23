@@ -4,6 +4,7 @@ import fastifyStatic from '@fastify/static';
 import Fastify from 'fastify';
 import { registerAuth } from './api/auth.js';
 import { registerRoutes } from './api/index.js';
+import { registerSecurityHeaders } from './api/security.js';
 import { db, initSchema } from './db.js';
 import { env } from './env.js';
 import { initScheduler } from './jobs/scheduler.js';
@@ -16,9 +17,13 @@ import { logger } from './logger.js';
 async function main(): Promise<void> {
     initSchema();
 
-    const app = Fastify({ logger: { level: env.logLevel }, bodyLimit: 8 * 1024 * 1024 });
+    // trustProxy so req.ip reflects the real client (via X-Forwarded-For) when
+    // behind a reverse proxy — otherwise the login rate-limit would bucket every
+    // request under the single proxy IP.
+    const app = Fastify({ logger: { level: env.logLevel }, bodyLimit: 8 * 1024 * 1024, trustProxy: true });
     await app.register(cookie, { secret: env.secret });
 
+    registerSecurityHeaders(app);
     registerAuth(app);
     registerRoutes(app);
 

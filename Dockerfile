@@ -21,6 +21,12 @@ RUN npm run build --workspace=web
 FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
 
+# gosu lets the entrypoint drop from root to the unprivileged `node` user after
+# fixing up volume ownership.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gosu \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production
 ENV DATA_DIR=/data
 ENV PORT=3000
@@ -29,6 +35,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/server ./server
 COPY --from=build /app/web/dist ./web/dist
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 VOLUME ["/data"]
 EXPOSE 3000
@@ -36,5 +44,7 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-# npm runs the script with the workspace dir as cwd, so WEB_DIR (../web/dist) resolves correctly.
-CMD ["npm", "start", "--workspace=server"]
+# Starts as root, chowns /data, then runs the server as the node user (see the
+# entrypoint). npm runs the script with the workspace dir as cwd, so WEB_DIR
+# (../web/dist) resolves correctly.
+ENTRYPOINT ["docker-entrypoint.sh"]

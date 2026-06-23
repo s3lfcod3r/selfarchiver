@@ -15,7 +15,13 @@ function wrapEmailHtml(html: string, dark: boolean): string {
     const bg = dark ? '#0d1117' : '#ffffff';
     const fg = dark ? '#e6edf3' : '#111827';
     const link = dark ? '#2dd4bf' : '#0f766e';
-    return `<!doctype html><html><head><meta charset="utf-8"><style>
+    // Strict CSP so viewing an archived mail never phones home: remote images
+    // (tracking pixels / "mail opened" beacons), scripts and any other network
+    // request are blocked — only inline styles and embedded data: images render.
+    return `<!doctype html><html><head><meta charset="utf-8">
+        <meta http-equiv="Content-Security-Policy"
+            content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:;">
+        <style>
         html,body{margin:0;padding:14px;background:${bg};color:${fg};
             font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.5;}
         a{color:${link};} img{max-width:100%;height:auto;}
