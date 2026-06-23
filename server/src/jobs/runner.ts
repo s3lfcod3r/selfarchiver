@@ -46,6 +46,7 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
     let scanned = 0;
     let archived = 0;
     let deleted = 0;
+    let note: string | null = null;
     let connInfo = '';
 
     try {
@@ -89,14 +90,23 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
                 folders = [...selected];
             }
 
-            // Fail early and clearly if the rule points at folders the server
-            // does not have — naming them and listing what is actually available.
+            // Folders can be renamed or removed at any time — that must never
+            // break a run. Skip any that no longer exist, process the rest, and
+            // record a non-fatal note so the change stays visible. The run only
+            // fails (below) if *nothing* selectable remains.
             const missing = folders.filter((f) => !known.has(f));
             if (missing.length > 0) {
+                folders = folders.filter((f) => known.has(f));
+                note = `Skipped ${missing.length} folder(s) no longer on the server: ${missing
+                    .map((m) => `"${m}"`)
+                    .join(', ')}.`;
+                logger.warn({ ruleId: rule.id, missing }, 'rule references folders not on the server');
+            }
+            if (folders.length === 0) {
                 throw new Error(
-                    `Folder not found on the server: ${missing.map((m) => `"${m}"`).join(', ')}. ` +
-                        `Available folders: ${allPaths.slice(0, 40).join(', ')}. ` +
-                        `Edit the rule, refresh the folder list and pick from these.`,
+                    `None of the rule's folders exist on the server anymore (${missing
+                        .map((m) => `"${m}"`)
+                        .join(', ')}). Edit the rule and pick from: ${allPaths.slice(0, 40).join(', ')}.`,
                 );
             }
 
@@ -138,8 +148,8 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
         });
 
         setSourceStatus(rule.sourceId, 'ok', null);
-        finishRun(run.id, { status: 'success', scanned, archived, deleted, error: null });
-        logger.info({ ruleId: rule.id, scanned, archived, deleted }, 'rule run finished');
+        finishRun(run.id, { status: 'success', scanned, archived, deleted, error: null, note });
+        logger.info({ ruleId: rule.id, scanned, archived, deleted, note }, 'rule run finished');
     } catch (err) {
         const message = describeImapError(err) + connInfo;
         if (rule.sourceId) setSourceStatus(rule.sourceId, 'error', message);

@@ -92,7 +92,8 @@ export function initSchema(): void {
             scanned     INTEGER NOT NULL DEFAULT 0,
             archived    INTEGER NOT NULL DEFAULT 0,
             deleted     INTEGER NOT NULL DEFAULT 0,
-            error       TEXT
+            error       TEXT,
+            note        TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_runs_rule ON runs(rule_id);
         CREATE INDEX IF NOT EXISTS idx_runs_started_at ON runs(started_at);
@@ -107,6 +108,7 @@ export function initSchema(): void {
     ensureColumn('sources', 'allow_self_signed', 'INTEGER NOT NULL DEFAULT 0');
     ensureColumn('rules', 'min_age_unit', "TEXT NOT NULL DEFAULT 'days'");
     ensureColumn('rules', 'include_subfolders', 'INTEGER NOT NULL DEFAULT 0');
+    ensureColumn('runs', 'note', 'TEXT');
 }
 
 /** Add a column to an existing table if it is not already present. */

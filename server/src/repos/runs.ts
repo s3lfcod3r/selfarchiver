@@ -15,6 +15,7 @@ interface RunRow {
     archived: number;
     deleted: number;
     error: string | null;
+    note: string | null;
 }
 
 function rowToRun(r: RunRow): Run {
@@ -29,6 +30,7 @@ function rowToRun(r: RunRow): Run {
         archived: r.archived,
         deleted: r.deleted,
         error: r.error,
+        note: r.note ?? null,
     };
 }
 
@@ -43,11 +45,18 @@ export function createRun(ruleId: string, trigger: RunTrigger): Run {
 
 export function finishRun(
     id: string,
-    result: { status: RunStatus; scanned: number; archived: number; deleted: number; error: string | null },
+    result: {
+        status: RunStatus;
+        scanned: number;
+        archived: number;
+        deleted: number;
+        error: string | null;
+        note?: string | null;
+    },
 ): void {
     db.prepare(
-        'UPDATE runs SET status=?, finished_at=?, scanned=?, archived=?, deleted=?, error=? WHERE id=?',
-    ).run(result.status, Date.now(), result.scanned, result.archived, result.deleted, result.error, id);
+        'UPDATE runs SET status=?, finished_at=?, scanned=?, archived=?, deleted=?, error=?, note=? WHERE id=?',
+    ).run(result.status, Date.now(), result.scanned, result.archived, result.deleted, result.error, result.note ?? null, id);
 }
 
 export function getRun(id: string): Run | null {

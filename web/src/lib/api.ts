@@ -86,6 +86,7 @@ export interface Run {
     archived: number;
     deleted: number;
     error: string | null;
+    note: string | null;
 }
 
 export interface MailboxFolder {

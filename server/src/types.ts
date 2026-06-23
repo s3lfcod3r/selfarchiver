@@ -128,6 +128,8 @@ export interface Run {
     archived: number;
     deleted: number;
     error: string | null;
+    /** Non-fatal note for a successful run, e.g. folders that were skipped. */
+    note: string | null;
 }
 
 // --- IMAP folder listing ----------------------------------------------------

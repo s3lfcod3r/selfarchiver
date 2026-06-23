@@ -201,7 +201,14 @@ export default function Runs() {
                                                 {run.error}
                                             </span>
                                         ) : (
-                                            t('runs.resultLine', { s: run.scanned, a: run.archived, d: run.deleted })
+                                            <>
+                                                <div>{t('runs.resultLine', { s: run.scanned, a: run.archived, d: run.deleted })}</div>
+                                                {run.note && (
+                                                    <div className="mt-0.5 break-words text-accent" title={run.note}>
+                                                        ⚠ {run.note}
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                     <div className="col-span-2 flex items-center justify-end gap-2">
