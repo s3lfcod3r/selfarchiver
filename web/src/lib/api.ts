@@ -238,6 +238,9 @@ export const api = {
         return request<{ runs: Run[]; total: number; limit: number; offset: number }>(`/runs${q ? `?${q}` : ''}`);
     },
 
+    deleteRun: (id: string) => request<{ ok: boolean }>(`/runs/${id}`, { method: 'DELETE' }),
+    clearRuns: () => request<{ deleted: number }>('/runs', { method: 'DELETE' }),
+
     getSettings: () => request<{ runsMax: number }>('/settings'),
     updateSettings: (runsMax: number) =>
         request<{ runsMax: number }>('/settings', { method: 'PUT', body: JSON.stringify({ runsMax }) }),

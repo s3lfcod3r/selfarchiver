@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { queryRuns } from '../repos/runs.js';
+import { deleteAllRuns, deleteRun, queryRuns } from '../repos/runs.js';
 import { getRunsMax, setRunsMax } from '../repos/settings.js';
 import type { RunStatus, RunTrigger } from '../types.js';
 
@@ -36,6 +36,16 @@ export function registerRunRoutes(app: FastifyInstance): void {
             offset,
         });
         return { runs: result.items, total: result.total, limit, offset };
+    });
+
+    // Delete every run from the history.
+    app.delete('/api/runs', async () => ({ deleted: deleteAllRuns() }));
+
+    // Delete a single run.
+    app.delete('/api/runs/:id', async (req, reply) => {
+        const { id } = req.params as { id: string };
+        if (!deleteRun(id)) return reply.code(404).send({ error: 'Run not found' });
+        return { ok: true };
     });
 
     app.get('/api/settings', async () => ({ runsMax: getRunsMax() }));

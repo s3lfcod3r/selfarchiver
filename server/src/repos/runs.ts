@@ -123,6 +123,16 @@ export function queryRuns(q: RunQuery): { items: Run[]; total: number } {
     return { items: rows.map(rowToRun), total: total.c };
 }
 
+/** Delete a single run from the history. Returns true if a row was removed. */
+export function deleteRun(id: string): boolean {
+    return db.prepare('DELETE FROM runs WHERE id = ?').run(id).changes > 0;
+}
+
+/** Clear the entire run history. Returns the number of rows removed. */
+export function deleteAllRuns(): number {
+    return db.prepare('DELETE FROM runs').run().changes;
+}
+
 /** Trim the run history to the newest `max` rows. `max <= 0` keeps everything. */
 export function pruneRuns(max: number): number {
     if (max <= 0) return 0;

@@ -83,6 +83,20 @@ export default function Runs() {
         void query(runs.length, true);
     };
 
+    const removeRun = async (run: Run) => {
+        if (!confirm(t('runs.deleteConfirm'))) return;
+        await api.deleteRun(run.id);
+        pagedRef.current = false;
+        void query(0, false);
+    };
+
+    const clearAll = async () => {
+        if (!confirm(t('runs.clearAllConfirm'))) return;
+        await api.clearRuns();
+        pagedRef.current = false;
+        void query(0, false);
+    };
+
     const hasFilters = Boolean(search || status || trigger || fromDate || toDate);
     const clearFilters = () => {
         setSearch('');
@@ -100,9 +114,16 @@ export default function Runs() {
                 title={t('nav.activity')}
                 subtitle={t('runs.count', { n: total.toLocaleString() })}
                 action={
-                    <Button variant="ghost" onClick={() => setSettingsOpen(true)}>
-                        ⚙ {t('runs.settings')}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        {total > 0 && (
+                            <Button variant="ghost" onClick={() => void clearAll()}>
+                                🗑 {t('runs.clearAll')}
+                            </Button>
+                        )}
+                        <Button variant="ghost" onClick={() => setSettingsOpen(true)}>
+                            ⚙ {t('runs.settings')}
+                        </Button>
+                    </div>
                 }
             />
 
@@ -183,8 +204,18 @@ export default function Runs() {
                                             t('runs.resultLine', { s: run.scanned, a: run.archived, d: run.deleted })
                                         )}
                                     </div>
-                                    <div className="col-span-2 text-right" title={formatDate(run.startedAt)}>
-                                        {relativeTime(run.startedAt)}
+                                    <div className="col-span-2 flex items-center justify-end gap-2">
+                                        <span className="text-right text-muted" title={formatDate(run.startedAt)}>
+                                            {relativeTime(run.startedAt)}
+                                        </span>
+                                        <button
+                                            onClick={() => void removeRun(run)}
+                                            className="shrink-0 text-muted transition-colors hover:text-danger"
+                                            title={t('runs.delete')}
+                                            aria-label={t('runs.delete')}
+                                        >
+                                            🗑
+                                        </button>
                                     </div>
                                 </li>
                             );

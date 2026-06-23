@@ -206,6 +206,10 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'runs.retentionUnit': 'runs',
         'runs.retentionHint': 'Older runs are pruned automatically after each run. 0 = keep everything.',
         'runs.retentionSaved': 'Saved.',
+        'runs.delete': 'Delete run',
+        'runs.deleteConfirm': 'Delete this run from the history?',
+        'runs.clearAll': 'Clear all',
+        'runs.clearAllConfirm': 'Delete ALL runs from the activity history? This cannot be undone.',
 
         'cron.daily0300': 'Every day at 03:00',
         'cron.daily0400': 'Every day at 04:00',
@@ -412,6 +416,10 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'runs.retentionUnit': 'Läufe',
         'runs.retentionHint': 'Ältere Läufe werden nach jedem Lauf automatisch entfernt. 0 = alles behalten.',
         'runs.retentionSaved': 'Gespeichert.',
+        'runs.delete': 'Lauf löschen',
+        'runs.deleteConfirm': 'Diesen Lauf aus dem Verlauf löschen?',
+        'runs.clearAll': 'Alle löschen',
+        'runs.clearAllConfirm': 'ALLE Läufe aus dem Verlauf löschen? Kann nicht rückgängig gemacht werden.',
 
         'cron.daily0300': 'Täglich um 03:00',
         'cron.daily0400': 'Täglich um 04:00',
