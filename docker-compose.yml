@@ -1,9 +1,9 @@
 services:
     selfarchiver:
         # Build locally, or swap for the published image:
-        # image: ghcr.io/kabelsalatundklartext/selfarchiver:latest
+        # image: ghcr.io/s3lfcod3r/selfarchiver:latest
         build: .
-        image: ghcr.io/kabelsalatundklartext/selfarchiver:latest
+        image: ghcr.io/s3lfcod3r/selfarchiver:latest
         container_name: selfarchiver
         restart: unless-stopped
         ports:

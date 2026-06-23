@@ -8,7 +8,7 @@ import { useTheme } from '../lib/theme.js';
 
 const APP_VERSION = 'v1.0';
 const WEBSITE_URL = 'https://selfcoder.de';
-const REPO_URL = 'https://github.com/kabelsalatundklartext/selfarchiver';
+const REPO_URL = 'https://github.com/s3lfcod3r/selfarchiver';
 
 const NAV: { to: string; key: string; icon: ReactNode }[] = [
     { to: '/', key: 'nav.overview', icon: <IconGrid /> },

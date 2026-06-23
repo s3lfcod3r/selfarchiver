@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>SelfArchiver</Name>
-  <Repository>ghcr.io/kabelsalatundklartext/selfarchiver:latest</Repository>
-  <Registry>https://ghcr.io/kabelsalatundklartext/selfarchiver</Registry>
+  <Repository>ghcr.io/s3lfcod3r/selfarchiver:latest</Repository>
+  <Registry>https://ghcr.io/s3lfcod3r/selfarchiver</Registry>
   <Network>bridge</Network>
   <MyIP/>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
   <Support/>
-  <Project>https://github.com/kabelsalatundklartext/selfarchiver</Project>
+  <Project>https://github.com/s3lfcod3r/selfarchiver</Project>
   <Overview>Self-hosted email archiver with the features other archivers lack: pick exactly which IMAP folders to archive, build rules with filters (sender / subject / attachment / age), give each rule its own schedule, and optionally delete archived mail from the source mailbox to keep it small. Everything is stored in a single container (SQLite + full-text search + .eml files on disk). No external database required.</Overview>
   <Category>Productivity: MailServer: Tools:</Category>
   <WebUI>http://[IP]:[PORT:3000]/</WebUI>
   <TemplateURL/>
-  <Icon>https://raw.githubusercontent.com/kabelsalatundklartext/selfarchiver/main/assets/icon.png</Icon>
+  <Icon>https://raw.githubusercontent.com/s3lfcod3r/selfarchiver/main/assets/icon.png</Icon>
   <ExtraParams/>
   <PostArgs/>
   <CPUset/>

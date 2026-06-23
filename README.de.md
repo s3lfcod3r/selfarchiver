@@ -49,7 +49,7 @@ Das Archivieren ist **idempotent**: ein stabiler Schlüssel pro Nachricht verhin
 ### Docker Compose
 
 ```bash
-git clone https://github.com/kabelsalatundklartext/selfarchiver.git
+git clone https://github.com/s3lfcod3r/selfarchiver.git
 cd selfarchiver
 cp .env.example .env
 # APP_SECRET setzen (openssl rand -hex 32) und optional AUTH_PASSWORD
@@ -62,7 +62,7 @@ docker compose up -d
 
 Das Template liegt unter [`unraid/selfarchiver.xml`](unraid/selfarchiver.xml). Füge dieses Repo als Template-Quelle hinzu oder füge das XML als neues Container-Template ein. Setze **APP_SECRET** (und optional **AUTH_PASSWORD**) und mappe `/data` z. B. auf `/mnt/user/appdata/selfarchiver`.
 
-Das Image liegt auf GHCR: `ghcr.io/kabelsalatundklartext/selfarchiver:latest`.
+Das Image liegt auf GHCR: `ghcr.io/s3lfcod3r/selfarchiver:latest`.
 
 ## Konfiguration
 
