@@ -67,20 +67,37 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
         const cutoff = Date.now() - rule.minAge * unitMs;
 
         await withClient(conn, async (client) => {
+            // Fetch the server's real folder list once. We use it both to expand
+            // subfolders and to validate the rule's selection up front, so a
+            // stale/renamed folder produces a precise, actionable error instead
+            // of a bare "unknown folder" deep inside the fetch.
+            const allPaths = (await client.list()).map((b) => b.path);
+            const known = new Set(allPaths);
+
             // Optionally expand the selected folders with any (new) subfolders,
             // discovered fresh on this run.
             let folders = rule.folders;
             if (rule.includeSubfolders) {
-                const all = (await client.list()).map((b) => b.path);
                 const selected = new Set(rule.folders);
                 for (const sel of rule.folders) {
-                    for (const path of all) {
+                    for (const path of allPaths) {
                         if (path !== sel && (path.startsWith(`${sel}.`) || path.startsWith(`${sel}/`))) {
                             selected.add(path);
                         }
                     }
                 }
                 folders = [...selected];
+            }
+
+            // Fail early and clearly if the rule points at folders the server
+            // does not have — naming them and listing what is actually available.
+            const missing = folders.filter((f) => !known.has(f));
+            if (missing.length > 0) {
+                throw new Error(
+                    `Folder not found on the server: ${missing.map((m) => `"${m}"`).join(', ')}. ` +
+                        `Available folders: ${allPaths.slice(0, 40).join(', ')}. ` +
+                        `Edit the rule, refresh the folder list and pick from these.`,
+                );
             }
 
             for (const folder of folders) {
