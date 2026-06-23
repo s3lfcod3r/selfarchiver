@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/selfarchiver-logo-wide.png" alt="SelfArchiver" width="440">
+  <img src="assets/logo.png" alt="SelfArchiver" width="240">
 </p>
 
 <p align="center">Self-hosted email archiver that keeps your mailbox <strong>small</strong> and your mail <strong>safe</strong> — with the controls other archivers are missing.</p>
