@@ -1,9 +1,18 @@
 import { archiveMessage } from '../archive.js';
 import { decryptSecret } from '../crypto.js';
-import { deleteMessages, fetchEnvelopes, fetchSource, withClient, type EnvelopeSummary, type ImapConnection } from '../imap.js';
+import {
+    deleteMessages,
+    describeImapError,
+    fetchEnvelopes,
+    fetchSource,
+    withClient,
+    type EnvelopeSummary,
+    type ImapConnection,
+} from '../imap.js';
 import { logger } from '../logger.js';
 import { getSource, getSourcePasswordEnc, setSourceStatus } from '../repos/sources.js';
-import { createRun, finishRun, getRun } from '../repos/runs.js';
+import { createRun, finishRun, getRun, pruneRuns } from '../repos/runs.js';
+import { getRunsMax } from '../repos/settings.js';
 import { matchesFilter } from '../rules/engine.js';
 import type { Rule, Run, RunTrigger } from '../types.js';
 
@@ -115,12 +124,18 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
         finishRun(run.id, { status: 'success', scanned, archived, deleted, error: null });
         logger.info({ ruleId: rule.id, scanned, archived, deleted }, 'rule run finished');
     } catch (err) {
-        const message = (err instanceof Error ? err.message : String(err)) + connInfo;
+        const message = describeImapError(err) + connInfo;
         if (rule.sourceId) setSourceStatus(rule.sourceId, 'error', message);
         finishRun(run.id, { status: 'error', scanned, archived, deleted, error: message });
         logger.error({ ruleId: rule.id, err: message }, 'rule run failed');
     } finally {
         running.delete(rule.id);
+        // Trim the run history to the configured cap (newest kept).
+        try {
+            pruneRuns(getRunsMax());
+        } catch {
+            // history trimming is best-effort; never fail a run because of it
+        }
     }
 
     // Return the finished record (status + counters), not the initial snapshot.

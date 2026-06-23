@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { decryptSecret, encryptSecret } from '../crypto.js';
-import { listFolders, testConnection, type ImapConnection } from '../imap.js';
+import { describeImapError, listFolders, testConnection, type ImapConnection } from '../imap.js';
 import {
     createSource,
     deleteSource,
@@ -33,7 +33,7 @@ async function safeTest(conn: ImapConnection): Promise<{ ok: boolean; error: str
         await testConnection(conn);
         return { ok: true, error: null };
     } catch (err) {
-        return { ok: false, error: err instanceof Error ? err.message : String(err) };
+        return { ok: false, error: describeImapError(err) };
     }
 }
 
@@ -139,7 +139,7 @@ export function registerSourceRoutes(app: FastifyInstance): void {
         try {
             return { folders: await listFolders(conn) };
         } catch (err) {
-            return reply.code(502).send({ error: err instanceof Error ? err.message : String(err) });
+            return reply.code(502).send({ error: describeImapError(err) });
         }
     });
 }

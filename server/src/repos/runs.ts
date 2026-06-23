@@ -61,3 +61,73 @@ export function listRuns(limit = 50, ruleId?: string): Run[] {
         : (db.prepare('SELECT * FROM runs ORDER BY started_at DESC LIMIT ?').all(limit) as RunRow[]);
     return rows.map(rowToRun);
 }
+
+export interface RunQuery {
+    ruleId?: string;
+    status?: RunStatus;
+    trigger?: RunTrigger;
+    /** Inclusive started_at range, epoch ms. */
+    from?: number;
+    to?: number;
+    /** Free-text match against the rule name or the run's error message. */
+    search?: string;
+    limit: number;
+    offset: number;
+}
+
+/**
+ * Paginated, filterable run history. Joins `rules` (LEFT, since a run can
+ * outlive its rule) so the free-text search can match the rule name as well as
+ * the error text.
+ */
+export function queryRuns(q: RunQuery): { items: Run[]; total: number } {
+    const conds: string[] = [];
+    const params: Record<string, unknown> = {};
+    if (q.ruleId) {
+        conds.push('r.rule_id = @ruleId');
+        params.ruleId = q.ruleId;
+    }
+    if (q.status) {
+        conds.push('r.status = @status');
+        params.status = q.status;
+    }
+    if (q.trigger) {
+        conds.push('r.trigger = @trigger');
+        params.trigger = q.trigger;
+    }
+    if (q.from != null) {
+        conds.push('r.started_at >= @from');
+        params.from = q.from;
+    }
+    if (q.to != null) {
+        conds.push('r.started_at <= @to');
+        params.to = q.to;
+    }
+    if (q.search && q.search.trim()) {
+        conds.push('(ru.name LIKE @like OR r.error LIKE @like)');
+        params.like = `%${q.search.trim().replace(/[%_\\]/g, '\\$&')}%`;
+    }
+
+    const whereSql = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
+    const fromSql = 'runs r LEFT JOIN rules ru ON ru.id = r.rule_id';
+
+    const rows = db
+        .prepare(
+            `SELECT r.* FROM ${fromSql} ${whereSql} ORDER BY r.started_at DESC LIMIT @limit OFFSET @offset`,
+        )
+        .all({ ...params, limit: q.limit, offset: q.offset }) as RunRow[];
+
+    const countStmt = db.prepare(`SELECT COUNT(*) AS c FROM ${fromSql} ${whereSql}`);
+    const total = (Object.keys(params).length ? countStmt.get(params) : countStmt.get()) as { c: number };
+
+    return { items: rows.map(rowToRun), total: total.c };
+}
+
+/** Trim the run history to the newest `max` rows. `max <= 0` keeps everything. */
+export function pruneRuns(max: number): number {
+    if (max <= 0) return 0;
+    const info = db
+        .prepare('DELETE FROM runs WHERE id NOT IN (SELECT id FROM runs ORDER BY started_at DESC LIMIT ?)')
+        .run(max);
+    return info.changes;
+}

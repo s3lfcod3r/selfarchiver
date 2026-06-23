@@ -213,8 +213,34 @@ export const api = {
             body: JSON.stringify({ folder, sourceId }),
         }),
 
-    listRuns: (ruleId?: string) =>
-        request<{ runs: Run[] }>(`/runs${ruleId ? `?ruleId=${ruleId}` : ''}`).then((r) => r.runs),
+    listRuns: (
+        params: {
+            ruleId?: string;
+            status?: Run['status'];
+            trigger?: Run['trigger'];
+            from?: number;
+            to?: number;
+            search?: string;
+            limit?: number;
+            offset?: number;
+        } = {},
+    ) => {
+        const qs = new URLSearchParams();
+        if (params.ruleId) qs.set('ruleId', params.ruleId);
+        if (params.status) qs.set('status', params.status);
+        if (params.trigger) qs.set('trigger', params.trigger);
+        if (params.from) qs.set('from', String(params.from));
+        if (params.to) qs.set('to', String(params.to));
+        if (params.search) qs.set('search', params.search);
+        if (params.limit) qs.set('limit', String(params.limit));
+        if (params.offset) qs.set('offset', String(params.offset));
+        const q = qs.toString();
+        return request<{ runs: Run[]; total: number; limit: number; offset: number }>(`/runs${q ? `?${q}` : ''}`);
+    },
+
+    getSettings: () => request<{ runsMax: number }>('/settings'),
+    updateSettings: (runsMax: number) =>
+        request<{ runsMax: number }>('/settings', { method: 'PUT', body: JSON.stringify({ runsMax }) }),
 };
 
 export interface SourceFormValues {

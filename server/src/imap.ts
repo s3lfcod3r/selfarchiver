@@ -131,6 +131,54 @@ export async function testConnection(conn: ImapConnection): Promise<void> {
     });
 }
 
+/**
+ * Turn an imapflow / socket error into a message that actually says what went
+ * wrong. imapflow collapses most server rejections into a bare "Command failed"
+ * and hides the real reason in `responseText` / `serverResponseCode`; network
+ * problems surface a Node `code` instead. We unwrap both so the activity log and
+ * the connection test show something actionable (e.g. "IMAP access not enabled")
+ * rather than "Command failed".
+ */
+export function describeImapError(err: unknown): string {
+    if (!err || typeof err !== 'object') return String(err);
+    const e = err as {
+        message?: string;
+        responseText?: string;
+        response?: string;
+        serverResponseCode?: string;
+        authenticationFailed?: boolean;
+        code?: string;
+    };
+
+    // Authentication / authorization — by far the most common and confusing case.
+    if (e.authenticationFailed || e.serverResponseCode === 'AUTHENTICATIONFAILED') {
+        const detail = (e.responseText || e.response || '').trim();
+        return `Login refused by the mail server — wrong username/password, or IMAP access is not enabled for this mailbox${detail ? ` (server said: ${detail})` : ''}.`;
+    }
+
+    // Network / TLS layer — these carry a Node error code, not a server response.
+    const NET_HINTS: Record<string, string> = {
+        ENOTFOUND: 'host not found — check the IMAP host',
+        EAI_AGAIN: 'DNS lookup failed — check the IMAP host / network',
+        ECONNREFUSED: 'connection refused — check host and port',
+        ETIMEDOUT: 'connection timed out — check host, port and firewall',
+        ECONNRESET: 'connection reset by the server',
+        DEPTH_ZERO_SELF_SIGNED_CERT: 'self-signed certificate — enable "Accept self-signed certificate"',
+        SELF_SIGNED_CERT_IN_CHAIN: 'self-signed certificate in chain — enable "Accept self-signed certificate"',
+        ERR_TLS_CERT_ALTNAME_INVALID: 'TLS certificate does not match the host name',
+    };
+    if (e.code && NET_HINTS[e.code]) return NET_HINTS[e.code];
+    if (e.code) return `${e.code}${e.message ? ` (${e.message})` : ''}`;
+
+    // Generic command failure: surface the server's own response text, which is
+    // exactly what imapflow buries behind "Command failed".
+    const serverText = (e.responseText || e.response || '').trim();
+    if (serverText && serverText !== e.message) {
+        return `${e.message ?? 'IMAP error'}: ${serverText}`;
+    }
+    return e.message ?? 'IMAP error';
+}
+
 function specialUseOf(box: ListResponse): string | null {
     if (box.specialUse) return box.specialUse;
     const flags = box.flags;

@@ -96,6 +96,11 @@ export function initSchema(): void {
         );
         CREATE INDEX IF NOT EXISTS idx_runs_rule ON runs(rule_id);
         CREATE INDEX IF NOT EXISTS idx_runs_started_at ON runs(started_at);
+
+        CREATE TABLE IF NOT EXISTS settings (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        );
     `);
 
     // Lightweight migrations for databases created before a column existed.
