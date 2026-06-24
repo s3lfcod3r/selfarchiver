@@ -246,7 +246,7 @@ export const api = {
         if (params.limit) qs.set('limit', String(params.limit));
         if (params.offset) qs.set('offset', String(params.offset));
         const q = qs.toString();
-        return request<{ items: ArchivedEmail[]; total: number; limit: number; offset: number }>(
+        return request<{ items: ArchivedEmail[]; total: number; linked: boolean; limit: number; offset: number }>(
             `/runs/${id}/emails${q ? `?${q}` : ''}`,
         );
     },

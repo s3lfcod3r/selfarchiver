@@ -212,8 +212,8 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'runs.clearAllConfirm': 'Delete ALL runs from the activity history? This cannot be undone.',
         'runs.archivedTitle': 'Archived in this run',
         'runs.viewHint': 'Show the archived emails',
-        'runs.noArchived': 'This run archived nothing.',
-        'runs.olderRunHint': 'Runs from before this update have no per-email link.',
+        'runs.noArchived': 'No archived emails found for this run.',
+        'runs.olderRunHint': 'They may have since been removed from the archive.',
 
         'cron.daily0300': 'Every day at 03:00',
         'cron.daily0400': 'Every day at 04:00',
@@ -426,8 +426,8 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'runs.clearAllConfirm': 'ALLE Läufe aus dem Verlauf löschen? Kann nicht rückgängig gemacht werden.',
         'runs.archivedTitle': 'In diesem Lauf archiviert',
         'runs.viewHint': 'Archivierte Mails anzeigen',
-        'runs.noArchived': 'Dieser Lauf hat nichts archiviert.',
-        'runs.olderRunHint': 'Läufe von vor diesem Update haben keine Mail-Verknüpfung.',
+        'runs.noArchived': 'Keine archivierten Mails für diesen Lauf gefunden.',
+        'runs.olderRunHint': 'Sie wurden evtl. inzwischen aus dem Archiv gelöscht.',
 
         'cron.daily0300': 'Täglich um 03:00',
         'cron.daily0400': 'Täglich um 04:00',

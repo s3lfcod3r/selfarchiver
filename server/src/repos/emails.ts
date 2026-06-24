@@ -184,15 +184,39 @@ export function getEmail(id: string): ArchivedEmail | null {
     return row ? rowToEmail(row) : null;
 }
 
-/** Archived emails produced by a single run (newest first). */
-export function emailsByRun(runId: string, limit: number, offset: number): { items: ArchivedEmail[]; total: number } {
-    const rows = db
-        .prepare('SELECT * FROM archived_emails WHERE run_id = ? ORDER BY archived_at DESC, sent_at DESC LIMIT ? OFFSET ?')
-        .all(runId, limit, offset) as EmailRow[];
-    const total = (
-        db.prepare('SELECT COUNT(*) AS c FROM archived_emails WHERE run_id = ?').get(runId) as { c: number }
+/**
+ * Archived emails produced by a single run (newest first).
+ *
+ * New runs are matched exactly via `run_id`. Runs from before that column
+ * existed have no link, so we fall back to "same rule, archived within the
+ * run's time window" — unambiguous because runs of one rule never overlap.
+ */
+export function emailsForRun(
+    run: { id: string; ruleId: string; startedAt: number; finishedAt: number | null },
+    limit: number,
+    offset: number,
+): { items: ArchivedEmail[]; total: number; linked: boolean } {
+    const linkedTotal = (
+        db.prepare('SELECT COUNT(*) AS c FROM archived_emails WHERE run_id = ?').get(run.id) as { c: number }
     ).c;
-    return { items: rows.map(rowToEmail), total };
+    if (linkedTotal > 0) {
+        const rows = db
+            .prepare('SELECT * FROM archived_emails WHERE run_id = ? ORDER BY archived_at DESC LIMIT ? OFFSET ?')
+            .all(run.id, limit, offset) as EmailRow[];
+        return { items: rows.map(rowToEmail), total: linkedTotal, linked: true };
+    }
+
+    const end = run.finishedAt ?? Date.now();
+    const where = 'rule_id = ? AND archived_at >= ? AND archived_at <= ?';
+    const rows = db
+        .prepare(`SELECT * FROM archived_emails WHERE ${where} ORDER BY archived_at DESC LIMIT ? OFFSET ?`)
+        .all(run.ruleId, run.startedAt, end, limit, offset) as EmailRow[];
+    const total = (
+        db.prepare(`SELECT COUNT(*) AS c FROM archived_emails WHERE ${where}`).get(run.ruleId, run.startedAt, end) as {
+            c: number;
+        }
+    ).c;
+    return { items: rows.map(rowToEmail), total, linked: false };
 }
 
 /** Remove an archived email row. The FTS row is dropped by an AFTER DELETE trigger. */
