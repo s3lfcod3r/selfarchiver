@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { emailsByRun } from '../repos/emails.js';
 import { deleteAllRuns, deleteRun, queryRuns } from '../repos/runs.js';
 import { getRunsMax, setRunsMax } from '../repos/settings.js';
 import type { RunStatus, RunTrigger } from '../types.js';
@@ -36,6 +37,16 @@ export function registerRunRoutes(app: FastifyInstance): void {
             offset,
         });
         return { runs: result.items, total: result.total, limit, offset };
+    });
+
+    // The emails a single run archived (linked via run_id).
+    app.get('/api/runs/:id/emails', async (req) => {
+        const { id } = req.params as { id: string };
+        const q = req.query as { limit?: string; offset?: string };
+        const limit = Math.min(Number(q.limit ?? 100) || 100, MAX_LIMIT);
+        const offset = Math.max(Number(q.offset ?? 0) || 0, 0);
+        const result = emailsByRun(id, limit, offset);
+        return { items: result.items, total: result.total, limit, offset };
     });
 
     // Delete every run from the history.

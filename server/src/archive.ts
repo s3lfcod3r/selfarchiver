@@ -34,11 +34,12 @@ function safeSegment(value: string): string {
 export async function archiveMessage(params: {
     sourceId: string;
     ruleId: string | null;
+    runId: string | null;
     folder: string;
     envelope: EnvelopeSummary;
     raw: Buffer;
 }): Promise<ArchiveResult> {
-    const { sourceId, ruleId, folder, envelope, raw } = params;
+    const { sourceId, ruleId, runId, folder, envelope, raw } = params;
     const key = dedupeKey(sourceId, folder, envelope.messageId, raw);
     if (emailExists(key)) {
         return { archived: false, reason: 'duplicate' };
@@ -64,6 +65,7 @@ export async function archiveMessage(params: {
     const id = insertEmail({
         sourceId,
         ruleId,
+        runId,
         messageId: envelope.messageId,
         folder,
         subject: envelope.subject,

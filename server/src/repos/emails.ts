@@ -52,6 +52,7 @@ export function emailExists(dedupeKey: string): boolean {
 export interface InsertEmailInput {
     sourceId: string;
     ruleId: string | null;
+    runId: string | null;
     messageId: string | null;
     folder: string;
     subject: string | null;
@@ -68,10 +69,10 @@ export interface InsertEmailInput {
 
 const insertEmailStmt = db.prepare(`
     INSERT OR IGNORE INTO archived_emails
-        (id, source_id, rule_id, message_id, folder, subject, from_addr, to_addr, sent_at, size,
+        (id, source_id, rule_id, run_id, message_id, folder, subject, from_addr, to_addr, sent_at, size,
          has_attachments, attachment_names, eml_path, archived_at, dedupe_key)
     VALUES
-        (@id, @source_id, @rule_id, @message_id, @folder, @subject, @from_addr, @to_addr, @sent_at, @size,
+        (@id, @source_id, @rule_id, @run_id, @message_id, @folder, @subject, @from_addr, @to_addr, @sent_at, @size,
          @has_attachments, @attachment_names, @eml_path, @archived_at, @dedupe_key)
 `);
 const insertFtsStmt = db.prepare(
@@ -89,6 +90,7 @@ export const insertEmail = db.transaction((input: InsertEmailInput): string | nu
         id,
         source_id: input.sourceId,
         rule_id: input.ruleId,
+        run_id: input.runId,
         message_id: input.messageId,
         folder: input.folder,
         subject: input.subject,
@@ -180,6 +182,17 @@ export function distinctFolders(sourceId?: string): string[] {
 export function getEmail(id: string): ArchivedEmail | null {
     const row = db.prepare('SELECT * FROM archived_emails WHERE id = ?').get(id) as EmailRow | undefined;
     return row ? rowToEmail(row) : null;
+}
+
+/** Archived emails produced by a single run (newest first). */
+export function emailsByRun(runId: string, limit: number, offset: number): { items: ArchivedEmail[]; total: number } {
+    const rows = db
+        .prepare('SELECT * FROM archived_emails WHERE run_id = ? ORDER BY archived_at DESC, sent_at DESC LIMIT ? OFFSET ?')
+        .all(runId, limit, offset) as EmailRow[];
+    const total = (
+        db.prepare('SELECT COUNT(*) AS c FROM archived_emails WHERE run_id = ?').get(runId) as { c: number }
+    ).c;
+    return { items: rows.map(rowToEmail), total };
 }
 
 /** Remove an archived email row. The FTS row is dropped by an AFTER DELETE trigger. */

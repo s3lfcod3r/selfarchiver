@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { PageHeader } from '../components/Layout.js';
 import { Badge, Button, Card, EmptyState, Input, Modal, Select, Spinner } from '../components/ui.js';
-import { api, type Rule, type Run } from '../lib/api.js';
-import { formatDate, relativeTime } from '../lib/format.js';
+import { api, type ArchivedEmail, type Rule, type Run } from '../lib/api.js';
+import { formatBytes, formatDate, relativeTime } from '../lib/format.js';
 import { useI18n } from '../lib/i18n.js';
 
 const PAGE = 50;
@@ -25,6 +25,7 @@ export default function Runs() {
     const [rules, setRules] = useState<Rule[]>([]);
     const [loading, setLoading] = useState(true);
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [viewing, setViewing] = useState<Run | null>(null);
 
     // Filters
     const [search, setSearch] = useState('');
@@ -202,7 +203,19 @@ export default function Runs() {
                                             </span>
                                         ) : (
                                             <>
-                                                <div>{t('runs.resultLine', { s: run.scanned, a: run.archived, d: run.deleted })}</div>
+                                                {run.archived > 0 ? (
+                                                    <button
+                                                        onClick={() => setViewing(run)}
+                                                        className="text-left hover:text-accent hover:underline"
+                                                        title={t('runs.viewHint')}
+                                                    >
+                                                        {t('runs.resultLine', { s: run.scanned, a: run.archived, d: run.deleted })}
+                                                    </button>
+                                                ) : (
+                                                    <div>
+                                                        {t('runs.resultLine', { s: run.scanned, a: run.archived, d: run.deleted })}
+                                                    </div>
+                                                )}
                                                 {run.note && (
                                                     <div className="mt-0.5 break-words text-accent" title={run.note}>
                                                         ⚠ {run.note}
@@ -239,7 +252,83 @@ export default function Runs() {
             )}
 
             {settingsOpen && <RetentionModal onClose={() => setSettingsOpen(false)} />}
+            {viewing && <RunEmailsModal run={viewing} onClose={() => setViewing(null)} />}
         </>
+    );
+}
+
+function RunEmailsModal({ run, onClose }: { run: Run; onClose: () => void }) {
+    const { t } = useI18n();
+    const [items, setItems] = useState<ArchivedEmail[]>([]);
+    const [total, setTotal] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    const load = (offset: number, append: boolean) => {
+        setLoading(true);
+        api.runEmails(run.id, { limit: 100, offset })
+            .then((res) => {
+                setTotal(res.total);
+                setItems((prev) => (append ? [...prev, ...res.items] : res.items));
+            })
+            .finally(() => setLoading(false));
+    };
+    useEffect(() => {
+        load(0, false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [run.id]);
+
+    return (
+        <Modal
+            wide
+            title={t('runs.archivedTitle')}
+            onClose={onClose}
+            footer={<Button onClick={onClose}>{t('common.close')}</Button>}
+        >
+            {loading && items.length === 0 ? (
+                <div className="flex justify-center py-10 text-muted">
+                    <Spinner />
+                </div>
+            ) : items.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted">
+                    {t('runs.noArchived')}
+                    {run.archived > 0 && (
+                        <>
+                            <br />
+                            <span className="text-xs">{t('runs.olderRunHint')}</span>
+                        </>
+                    )}
+                </p>
+            ) : (
+                <div className="flex flex-col">
+                    <ul className="divide-y divide-line">
+                        {items.map((email) => (
+                            <li key={email.id} className="flex items-center gap-3 py-2.5">
+                                <div className="min-w-0 flex-1">
+                                    <div className="truncate text-sm font-medium">{email.subject || t('arch.noSubject')}</div>
+                                    <div className="truncate font-mono text-xs text-muted">
+                                        {email.fromAddr || t('arch.unknown')} · {email.folder} · {formatDate(email.sentAt)}
+                                    </div>
+                                </div>
+                                <span className="shrink-0 font-mono text-xs text-muted">{formatBytes(email.size)}</span>
+                                <a
+                                    href={api.downloadUrl(email.id)}
+                                    className="shrink-0 text-sm font-medium text-accent hover:underline"
+                                >
+                                    .eml
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                    {items.length < total && (
+                        <div className="mt-3 flex justify-center">
+                            <Button onClick={() => load(items.length, true)} disabled={loading}>
+                                {loading ? <Spinner /> : t('arch.loadMore', { n: total - items.length })}
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </Modal>
     );
 }
 

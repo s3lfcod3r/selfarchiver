@@ -55,6 +55,7 @@ export function initSchema(): void {
             id               TEXT PRIMARY KEY,
             source_id        TEXT NOT NULL REFERENCES sources(id) ON DELETE CASCADE,
             rule_id          TEXT,
+            run_id           TEXT,
             message_id       TEXT,
             folder           TEXT NOT NULL,
             subject          TEXT,
@@ -70,6 +71,7 @@ export function initSchema(): void {
         );
         CREATE INDEX IF NOT EXISTS idx_emails_source ON archived_emails(source_id);
         CREATE INDEX IF NOT EXISTS idx_emails_archived_at ON archived_emails(archived_at);
+        CREATE INDEX IF NOT EXISTS idx_emails_run ON archived_emails(run_id);
 
         CREATE VIRTUAL TABLE IF NOT EXISTS emails_fts USING fts5(
             subject, sender, recipients, body
@@ -109,6 +111,7 @@ export function initSchema(): void {
     ensureColumn('rules', 'min_age_unit', "TEXT NOT NULL DEFAULT 'days'");
     ensureColumn('rules', 'include_subfolders', 'INTEGER NOT NULL DEFAULT 0');
     ensureColumn('runs', 'note', 'TEXT');
+    ensureColumn('archived_emails', 'run_id', 'TEXT');
 }
 
 /** Add a column to an existing table if it is not already present. */

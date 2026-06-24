@@ -241,6 +241,15 @@ export const api = {
 
     deleteRun: (id: string) => request<{ ok: boolean }>(`/runs/${id}`, { method: 'DELETE' }),
     clearRuns: () => request<{ deleted: number }>('/runs', { method: 'DELETE' }),
+    runEmails: (id: string, params: { limit?: number; offset?: number } = {}) => {
+        const qs = new URLSearchParams();
+        if (params.limit) qs.set('limit', String(params.limit));
+        if (params.offset) qs.set('offset', String(params.offset));
+        const q = qs.toString();
+        return request<{ items: ArchivedEmail[]; total: number; limit: number; offset: number }>(
+            `/runs/${id}/emails${q ? `?${q}` : ''}`,
+        );
+    },
 
     getSettings: () => request<{ runsMax: number }>('/settings'),
     updateSettings: (runsMax: number) =>

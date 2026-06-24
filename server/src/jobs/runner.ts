@@ -129,6 +129,7 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
                     const result = await archiveMessage({
                         sourceId: rule.sourceId,
                         ruleId: rule.id,
+                        runId: run.id,
                         folder,
                         envelope: env,
                         raw,
