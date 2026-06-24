@@ -71,7 +71,6 @@ export function initSchema(): void {
         );
         CREATE INDEX IF NOT EXISTS idx_emails_source ON archived_emails(source_id);
         CREATE INDEX IF NOT EXISTS idx_emails_archived_at ON archived_emails(archived_at);
-        CREATE INDEX IF NOT EXISTS idx_emails_run ON archived_emails(run_id);
 
         CREATE VIRTUAL TABLE IF NOT EXISTS emails_fts USING fts5(
             subject, sender, recipients, body
@@ -112,6 +111,11 @@ export function initSchema(): void {
     ensureColumn('rules', 'include_subfolders', 'INTEGER NOT NULL DEFAULT 0');
     ensureColumn('runs', 'note', 'TEXT');
     ensureColumn('archived_emails', 'run_id', 'TEXT');
+
+    // Indexes on columns that may have just been added by a migration above must
+    // be created here, not in the schema block — on an upgraded database the
+    // column does not exist yet when that block runs.
+    db.exec('CREATE INDEX IF NOT EXISTS idx_emails_run ON archived_emails(run_id)');
 }
 
 /** Add a column to an existing table if it is not already present. */
