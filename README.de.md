@@ -6,6 +6,11 @@
 
 <p align="center"><a href="README.md">English</a> · <strong>Deutsch</strong></p>
 
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="Lizenz: MIT"></a>
+  <a href="https://github.com/s3lfcod3r/selfarchiver/pkgs/container/selfarchiver"><img src="https://img.shields.io/badge/ghcr.io-selfarchiver-2496ED?logo=docker&logoColor=white" alt="GHCR-Image"></a>
+</p>
+
 ---
 
 Die meisten Archivierer können nur ein ganzes Konto spiegeln. SelfArchiver ist um vier Dinge herum gebaut, die andere nicht können:
@@ -17,7 +22,7 @@ Die meisten Archivierer können nur ein ganzes Konto spiegeln. SelfArchiver ist 
 
 Alles steckt in **einem Container**: SQLite (mit Volltextsuche) und `.eml`-Dateien auf einem einzigen Volume. Kein Postgres, Redis, keine Suchmaschine oder Tika-Beiwagen.
 
-> ⚠️ **Status:** frühe Version (v0.1). Die Aktion „Archivieren, dann löschen" entfernt Mails endgültig aus dem Postfach, sobald sie archiviert sind — teste zuerst mit *Nur archivieren* und behalte Backups von allem Unwiederbringlichen.
+> ⚠️ **Status:** v1.0.0. Die Aktion „Archivieren, dann löschen" entfernt Mails endgültig aus dem Postfach, sobald sie archiviert sind — teste zuerst mit *Nur archivieren* und behalte Backups von allem Unwiederbringlichen.
 
 ---
 
@@ -71,6 +76,7 @@ Das Image liegt auf GHCR: `ghcr.io/s3lfcod3r/selfarchiver:latest`.
 | `PORT` | `3000` | HTTP-Port. |
 | `APP_SECRET` | _(auto)_ | Schlüssel zum Verschlüsseln der Postfach-Passwörter + Signieren der Sitzungen. **Setzen und stabil halten.** |
 | `AUTH_PASSWORD` | _(leer)_ | Optionales UI-Passwort. Leer = offene Instanz. |
+| `COOKIE_SECURE` | `false` | Auf `true` setzen, wenn über HTTPS (hinter einem TLS-Proxy) bereitgestellt, damit das Sitzungs-Cookie nur über sichere Verbindungen gesendet wird. |
 | `TZ` / `CRON_TZ` | `UTC` | Zeitzone für die Zeitpläne. |
 | `DATA_DIR` | `/data` | Ort der SQLite-DB + des `.eml`-Archivs. |
 | `LOG_LEVEL` | `info` | `trace`…`error`. |

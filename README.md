@@ -6,6 +6,11 @@
 
 <p align="center"><strong>English</strong> · <a href="README.de.md">Deutsch</a></p>
 
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://github.com/s3lfcod3r/selfarchiver/pkgs/container/selfarchiver"><img src="https://img.shields.io/badge/ghcr.io-selfarchiver-2496ED?logo=docker&logoColor=white" alt="GHCR image"></a>
+</p>
+
 ---
 
 Most archivers can only mirror a whole account. SelfArchiver is built around four things they don't do:
@@ -17,7 +22,7 @@ Most archivers can only mirror a whole account. SelfArchiver is built around fou
 
 Everything lives in **one container**: SQLite (with full-text search) and `.eml` files on a single volume. No Postgres, Redis, search engine or Tika sidecars to run.
 
-> ⚠️ **Status:** early release (v0.1). The archive-then-delete action permanently removes mail from your mailbox once archived — test with *Archive only* first and keep backups of anything irreplaceable.
+> ⚠️ **Status:** v1.0.0. The archive-then-delete action permanently removes mail from your mailbox once archived — test with *Archive only* first and keep backups of anything irreplaceable.
 
 ---
 
@@ -71,6 +76,7 @@ The image is published to GHCR: `ghcr.io/s3lfcod3r/selfarchiver:latest`.
 | `PORT` | `3000` | HTTP port. |
 | `APP_SECRET` | _(auto)_ | Secret for encrypting mailbox passwords + signing sessions. **Set and keep stable.** |
 | `AUTH_PASSWORD` | _(empty)_ | Optional UI password. Empty = open instance. |
+| `COOKIE_SECURE` | `false` | Set to `true` when serving over HTTPS (behind a TLS proxy) so the session cookie is only sent over secure connections. |
 | `TZ` / `CRON_TZ` | `UTC` | Timezone for cron schedules. |
 | `DATA_DIR` | `/data` | SQLite DB + `.eml` archive location. |
 | `LOG_LEVEL` | `info` | `trace`…`error`. |
