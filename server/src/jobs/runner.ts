@@ -161,8 +161,10 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
         // Trim the run history to the configured cap (newest kept).
         try {
             pruneRuns(getRunsMax());
-        } catch {
-            // history trimming is best-effort; never fail a run because of it
+        } catch (err) {
+            // history trimming is best-effort; never fail a run because of it,
+            // but do surface the failure so a persistently growing history is visible.
+            logger.warn({ ruleId: rule.id, err: err instanceof Error ? err.message : err }, 'pruneRuns failed');
         }
     }
 

@@ -82,13 +82,48 @@ function isAuthenticated(cookie: string | undefined): boolean {
     return Boolean(id && sessionValid(id));
 }
 
+const STATE_CHANGING = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * Lightweight CSRF guard. Cookie-based sessions are otherwise only protected by
+ * SameSite=Lax, which does not stop every cross-site request. For state-changing
+ * methods we additionally require that, IF an Origin header is present, its host
+ * matches the request's own Host. Requests without an Origin (curl, the native
+ * app, server-to-server) are left untouched, so this never breaks legitimate
+ * non-browser clients.
+ */
+function crossOriginRequest(req: {
+    method: string;
+    headers: Record<string, unknown>;
+}): boolean {
+    if (!STATE_CHANGING.has(req.method)) return false;
+    const origin = req.headers.origin;
+    if (typeof origin !== 'string' || origin === '') return false; // no Origin → allow
+    let originHost: string;
+    try {
+        originHost = new URL(origin).host;
+    } catch {
+        return true; // malformed Origin → treat as cross-origin and reject
+    }
+    const host = typeof req.headers.host === 'string' ? req.headers.host : '';
+    return originHost !== host;
+}
+
 export function registerAuth(app: FastifyInstance): void {
     startCleanup();
 
     app.addHook('preHandler', async (req, reply) => {
-        if (!env.authPassword) return;
         const path = req.url.split('?')[0];
         if (!path.startsWith('/api/')) return;
+
+        // CSRF guard for browser-driven, state-changing requests. Runs regardless
+        // of whether AUTH_PASSWORD is set, and before the auth check.
+        if (crossOriginRequest({ method: req.method, headers: req.headers as Record<string, unknown> })) {
+            await reply.code(403).send({ error: 'Cross-origin request rejected' });
+            return;
+        }
+
+        if (!env.authPassword) return;
         if (OPEN_PATHS.has(path)) return;
         if (isAuthenticated(req.cookies?.[COOKIE])) return;
         await reply.code(401).send({ error: 'Unauthorized' });

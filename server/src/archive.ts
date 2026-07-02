@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, open } from 'node:fs/promises';
 import { join } from 'node:path';
 import { simpleParser } from 'mailparser';
 import { env } from './env.js';
-import { deleteArchivedEmail, emailExists, insertEmail } from './repos/emails.js';
+import { emailExists, insertEmail } from './repos/emails.js';
 import type { EnvelopeSummary } from './imap.js';
 
 /**
@@ -60,8 +60,26 @@ export async function archiveMessage(params: {
     const fileName = `${safeSegment(folder)}_${envelope.uid}_${key.slice(0, 12)}.eml`;
     const relPath = join(relDir, fileName);
 
-    // Insert metadata first: this is the atomic dedupe point. A null result means
-    // a concurrent run already archived this message, so we do not write a file.
+    // Write the .eml to disk FIRST and fsync it, so the file is durably on disk
+    // before any DB row claims the message is archived. This is the crash-safe
+    // ordering: a crash between the two steps can only leave an orphan file (which
+    // is harmless and gets reused on the next run via the identical path), never a
+    // DB row without its file — which would let an `archive_delete` rule delete the
+    // source mail even though the archived copy is missing.
+    const absPath = join(env.archiveDir, relPath);
+    await mkdir(join(env.archiveDir, relDir), { recursive: true });
+    const handle = await open(absPath, 'w');
+    try {
+        await handle.writeFile(raw);
+        await handle.sync(); // fsync: force the bytes to durable storage
+    } finally {
+        await handle.close();
+    }
+
+    // Now commit the metadata row. This is the atomic dedupe point: a null result
+    // means a concurrent run already archived this message. The file we just wrote
+    // has the same deterministic path/content as the winner's file, so we simply
+    // leave it in place.
     const id = insertEmail({
         sourceId,
         ruleId,
@@ -81,16 +99,6 @@ export async function archiveMessage(params: {
     });
     if (id === null) {
         return { archived: false, reason: 'duplicate' };
-    }
-
-    // Now write the .eml. If this fails, roll back the row so we never keep a DB
-    // entry without its file on disk.
-    try {
-        await mkdir(join(env.archiveDir, relDir), { recursive: true });
-        await writeFile(join(env.archiveDir, relPath), raw);
-    } catch (err) {
-        deleteArchivedEmail(id);
-        throw err;
     }
 
     return { archived: true, id };

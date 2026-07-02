@@ -214,6 +214,7 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'arch.deleteConfirm': 'Delete this email from the archive? This cannot be undone.',
         'arch.deleteFolder': 'Delete folder',
         'arch.deleteFolderConfirm': 'Delete ALL archived emails in "{folder}"? This cannot be undone.',
+        'arch.deleteFolderFailed': 'Could not delete the folder. Please reload and try again.',
 
         'runs.subtitle': 'Every rule run, what it archived, and what it removed from source.',
         'runs.none': 'No activity yet',
@@ -428,6 +429,7 @@ const STRINGS: Record<Lang, Record<string, string>> = {
         'arch.deleteConfirm': 'Diese E-Mail aus dem Archiv löschen? Kann nicht rückgängig gemacht werden.',
         'arch.deleteFolder': 'Ordner löschen',
         'arch.deleteFolderConfirm': 'ALLE archivierten E-Mails in „{folder}" löschen? Kann nicht rückgängig gemacht werden.',
+        'arch.deleteFolderFailed': 'Ordner konnte nicht gelöscht werden. Bitte neu laden und erneut versuchen.',
 
         'runs.subtitle': 'Jeder Regellauf — was archiviert und was aus der Quelle entfernt wurde.',
         'runs.none': 'Noch keine Aktivität',

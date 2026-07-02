@@ -43,14 +43,28 @@ async function main(): Promise<void> {
 
     initScheduler();
 
-    if (!env.authPassword && env.host !== '127.0.0.1') {
-        logger.warn(
-            `SelfArchiver is listening on ${env.host} with NO AUTH_PASSWORD set — the API is open. ` +
-                'Set AUTH_PASSWORD (and ideally put it behind HTTPS) before exposing it beyond a trusted network.',
-        );
+    // Fail safe when the API is unauthenticated: if no AUTH_PASSWORD is set we must
+    // not expose an open API on all interfaces. Unless the operator *explicitly*
+    // chose a HOST, bind to loopback only so the open API is unreachable from the
+    // network. An explicit HOST is respected but loudly warned about.
+    const hostExplicit = Boolean(process.env.HOST?.trim());
+    let host = env.host;
+    if (!env.authPassword) {
+        if (!hostExplicit) {
+            host = '127.0.0.1';
+            logger.warn(
+                'No AUTH_PASSWORD set — the API has no authentication. Binding to 127.0.0.1 (loopback) only. ' +
+                    'Set AUTH_PASSWORD to enable auth, or set HOST explicitly to bind elsewhere (not recommended without auth).',
+            );
+        } else if (host !== '127.0.0.1' && host !== 'localhost' && host !== '::1') {
+            logger.warn(
+                `DANGER: listening on ${host} with NO AUTH_PASSWORD set — the API is OPEN to anyone who can reach it. ` +
+                    'Set AUTH_PASSWORD (and put it behind HTTPS) before exposing it beyond a trusted network.',
+            );
+        }
     }
 
-    await app.listen({ port: env.port, host: env.host });
+    await app.listen({ port: env.port, host });
 
     const shutdown = async (): Promise<void> => {
         logger.info('shutting down');

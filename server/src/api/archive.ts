@@ -137,10 +137,31 @@ export function registerArchiveRoutes(app: FastifyInstance): void {
     });
 
     // Delete every archived email in a folder (optionally scoped to one mailbox).
+    // Requires the client to send the number of emails it expects to delete
+    // (expectedCount). If that no longer matches the current server-side count
+    // — e.g. a run archived more mail since the UI last loaded — we refuse with
+    // 409 instead of silently deleting a different set than the user confirmed.
     app.post('/api/emails/delete-folder', async (req, reply) => {
-        const { folder, sourceId } = (req.body ?? {}) as { folder?: string; sourceId?: string };
+        const { folder, sourceId, expectedCount } = (req.body ?? {}) as {
+            folder?: string;
+            sourceId?: string;
+            expectedCount?: number;
+        };
         if (!folder) return reply.code(400).send({ error: 'folder required' });
-        for (const e of emailsInFolder(folder, sourceId)) {
+        if (typeof expectedCount !== 'number' || !Number.isInteger(expectedCount) || expectedCount < 0) {
+            return reply.code(400).send({ error: 'expectedCount (non-negative integer) required' });
+        }
+
+        const emails = emailsInFolder(folder, sourceId);
+        if (emails.length !== expectedCount) {
+            return reply.code(409).send({
+                error: 'Folder contents changed since you last loaded them; reload and try again.',
+                expectedCount,
+                actualCount: emails.length,
+            });
+        }
+
+        for (const e of emails) {
             const absPath = safeArchivePath(e.emlPath);
             if (absPath) await unlink(absPath).catch(() => undefined);
         }

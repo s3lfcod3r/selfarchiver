@@ -208,10 +208,10 @@ export const api = {
     downloadUrl: (id: string) => `/api/emails/${id}/download`,
     attachmentUrl: (id: string, index: number) => `/api/emails/${id}/attachment/${index}`,
     deleteEmail: (id: string) => request<{ ok: boolean }>(`/emails/${id}`, { method: 'DELETE' }),
-    deleteFolder: (folder: string, sourceId?: string) =>
+    deleteFolder: (folder: string, expectedCount: number, sourceId?: string) =>
         request<{ deleted: number }>('/emails/delete-folder', {
             method: 'POST',
-            body: JSON.stringify({ folder, sourceId }),
+            body: JSON.stringify({ folder, sourceId, expectedCount }),
         }),
 
     listRuns: (

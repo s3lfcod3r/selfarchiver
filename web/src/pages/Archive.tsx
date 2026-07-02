@@ -99,8 +99,26 @@ export default function Archive() {
     };
 
     const removeFolder = async () => {
-        if (!folder || !confirm(t('arch.deleteFolderConfirm', { folder }))) return;
-        await api.deleteFolder(folder, sourceId || undefined);
+        if (!folder) return;
+        // Fetch the true folder-wide count (ignoring search/date filters, which the
+        // server-side folder delete also ignores) so the confirmation number and the
+        // expectedCount we send both match exactly what the server will delete.
+        const scope = await api.listEmails({
+            sourceId: sourceId || undefined,
+            folder,
+            limit: 1,
+            offset: 0,
+        });
+        const expectedCount = scope.total;
+        if (!confirm(t('arch.deleteFolderConfirm', { folder }))) return;
+        try {
+            await api.deleteFolder(folder, expectedCount, sourceId || undefined);
+        } catch (err) {
+            // 409 (folder changed since load) or any other failure: inform and reload.
+            alert(err instanceof Error ? err.message : t('arch.deleteFolderFailed'));
+            query(0, false);
+            return;
+        }
         setFolder(''); // resets selection and triggers a reload via the effect
     };
 
