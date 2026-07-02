@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { api } from '../lib/api.js';
-import { useI18n } from '../lib/i18n.js';
+import { useI18n, LANGS, type Lang } from '../lib/i18n.js';
 import { useTheme } from '../lib/theme.js';
 
 /** App shell: branded, collapsible sidebar + routed content area. */
@@ -209,22 +209,21 @@ export function ThemeToggle() {
 }
 
 export function LanguageToggle() {
-    const { lang, setLang } = useI18n();
+    const { lang, setLang, t } = useI18n();
     return (
-        <div className="inline-flex items-center gap-1 rounded-lg border border-line bg-surface p-1 text-xs font-medium">
-            {(['en', 'de'] as const).map((code) => (
-                <button
-                    key={code}
-                    onClick={() => setLang(code)}
-                    className={`rounded-md px-2.5 py-1 uppercase transition-colors ${
-                        lang === code ? 'bg-accent text-white' : 'text-muted hover:text-ink'
-                    }`}
-                    aria-pressed={lang === code}
-                >
-                    {code}
-                </button>
+        <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as Lang)}
+            aria-label={t('lang.language')}
+            title={t('lang.language')}
+            className="cursor-pointer rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs font-medium text-ink outline-none hover:border-accent focus:border-accent"
+        >
+            {LANGS.map((l) => (
+                <option key={l.code} value={l.code}>
+                    {l.label}
+                </option>
             ))}
-        </div>
+        </select>
     );
 }
 

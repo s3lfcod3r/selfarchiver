@@ -1,14 +1,47 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { fr } from './i18n-locales/fr';
+import { es } from './i18n-locales/es';
+import { it } from './i18n-locales/it';
+import { nl } from './i18n-locales/nl';
+import { pl } from './i18n-locales/pl';
+import { pt } from './i18n-locales/pt';
+import { sv } from './i18n-locales/sv';
+import { da } from './i18n-locales/da';
+import { cs } from './i18n-locales/cs';
+import { el } from './i18n-locales/el';
 
 /**
  * Tiny dependency-free i18n. Strings live in one dictionary keyed by a flat
  * dotted key; `t(key, vars)` interpolates `{name}` placeholders. The chosen
  * language is persisted in localStorage and defaults to the browser language.
+ * en + de live inline below; the other ten languages are one file each under
+ * i18n-locales/ and fall back to English for any missing key.
  */
 
-export type Lang = 'en' | 'de';
+export type Lang =
+    | 'en' | 'de' | 'fr' | 'es' | 'it' | 'nl'
+    | 'pl' | 'pt' | 'sv' | 'da' | 'cs' | 'el';
+
+/** Picker order + native names. */
+export const LANGS: { code: Lang; label: string }[] = [
+    { code: 'de', label: 'Deutsch' },
+    { code: 'en', label: 'English' },
+    { code: 'fr', label: 'Français' },
+    { code: 'es', label: 'Español' },
+    { code: 'it', label: 'Italiano' },
+    { code: 'nl', label: 'Nederlands' },
+    { code: 'pl', label: 'Polski' },
+    { code: 'pt', label: 'Português' },
+    { code: 'sv', label: 'Svenska' },
+    { code: 'da', label: 'Dansk' },
+    { code: 'cs', label: 'Čeština' },
+    { code: 'el', label: 'Ελληνικά' },
+];
+
+export const LANG_CODES: Lang[] = LANGS.map((l) => l.code);
 
 const STRINGS: Record<Lang, Record<string, string>> = {
+    fr, es, it, nl, pl, pt, sv, da, cs, el,
     en: {
         'common.cancel': 'Cancel',
         'common.save': 'Save',
@@ -451,11 +484,13 @@ export const CRON_PRESETS: { value: string; key: string }[] = [
 export function detectLang(): Lang {
     try {
         const saved = localStorage.getItem('sa_lang');
-        if (saved === 'en' || saved === 'de') return saved;
+        if (saved && (LANG_CODES as string[]).includes(saved)) return saved as Lang;
     } catch {
         // localStorage may be unavailable; fall back to navigator
     }
-    return typeof navigator !== 'undefined' && navigator.language?.toLowerCase().startsWith('de') ? 'de' : 'en';
+    const nav = typeof navigator !== 'undefined' ? navigator.language?.slice(0, 2).toLowerCase() : '';
+    if (nav && (LANG_CODES as string[]).includes(nav)) return nav as Lang;
+    return 'en';
 }
 
 export type TFunc = (key: string, vars?: Record<string, string | number>) => string;
