@@ -77,7 +77,7 @@ Das Image liegt auf GHCR: `ghcr.io/s3lfcod3r/selfarchiver:latest`.
 | `APP_SECRET` | _(auto)_ | Schlüssel zum Verschlüsseln der Postfach-Passwörter + Signieren der Sitzungen. **Setzen und stabil halten.** |
 | `AUTH_PASSWORD` | _(leer)_ | Optionales UI-Passwort. Leer = offene Instanz. |
 | `COOKIE_SECURE` | `false` | Auf `true` setzen, wenn über HTTPS (hinter einem TLS-Proxy) bereitgestellt, damit das Sitzungs-Cookie nur über sichere Verbindungen gesendet wird. |
-| `TZ` / `CRON_TZ` | `UTC` | Zeitzone für die Zeitpläne. |
+| `TZ` / `CRON_TZ` | `Europe/Berlin` | Zeitzone für die Zeitpläne. |
 | `DATA_DIR` | `/data` | Ort der SQLite-DB + des `.eml`-Archivs. |
 | `LOG_LEVEL` | `info` | `trace`…`error`. |
 
