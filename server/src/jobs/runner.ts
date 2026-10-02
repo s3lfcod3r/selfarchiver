@@ -122,7 +122,7 @@ export async function runRule(rule: Rule, trigger: RunTrigger): Promise<Run> {
                 const toDelete: number[] = [];
                 for (const env of summaries) {
                     // Exact age check (IMAP BEFORE is only day-granular; supports hours).
-                    if (env.date != null && env.date > cutoff) continue;
+                    if (env.date == null || env.date > cutoff) continue;
                     if (!matchesFilter(env, rule.filter)) continue;
                     const raw = await fetchSource(client, folder, env.uid);
                     if (!raw) continue;

@@ -51,7 +51,8 @@ export async function archiveMessage(params: {
         .map((a) => a.filename ?? 'attachment');
     const bodyText = parsed.text ?? stripHtml(parsed.html || '') ?? '';
 
-    const sentAt = envelope.date ?? (parsed.date ? parsed.date.getTime() : null);
+    let sentAt = envelope.date ?? (parsed.date ? parsed.date.getTime() : null);
+    if (sentAt != null && !Number.isFinite(sentAt)) sentAt = null;
     const dateForPath = sentAt ? new Date(sentAt) : new Date();
     const year = String(dateForPath.getUTCFullYear());
     const month = String(dateForPath.getUTCMonth() + 1).padStart(2, '0');
