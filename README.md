@@ -2,8 +2,6 @@
 
 <img src="assets/logo.png" width="240" alt="SelfArchiver logo" />
 
-# SelfArchiver
-
 **Self-hosted email archiver that keeps your mailbox small and your mail safe — with the controls other archivers are missing.**<br>
 *Selbstgehosteter E-Mail-Archivierer, der dein Postfach klein und deine Mails sicher hält — mit den Stellschrauben, die anderen Archivierern fehlen.*
 
