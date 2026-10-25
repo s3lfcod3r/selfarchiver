@@ -16,4 +16,4 @@ archive) with a focus on features those tools lack:
 - per-rule schedules, and
 - archive-then-delete retention to keep source mailboxes small.
 
-All code in this repository is licensed under the MIT License (see `LICENSE`).
+All code in this repository is proprietary — all rights reserved (see `LICENSE`).
