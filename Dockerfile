@@ -8,10 +8,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install workspace dependencies first for better layer caching.
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 COPY server/package.json ./server/
 COPY web/package.json ./web/
-RUN npm install
+# npm ci installiert exakt die Versionen aus package-lock.json (reproduzierbar).
+RUN npm ci
 
 # Build the frontend.
 COPY . .
