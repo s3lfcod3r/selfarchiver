@@ -51,7 +51,9 @@ export function scheduleRule(rule: Rule): void {
 export function unscheduleRule(id: string): void {
     const task = tasks.get(id);
     if (task) {
-        task.stop();
+        // destroy(), not stop(): node-cron 4 only drops destroyed tasks from its
+        // registry, so every rule edit would otherwise leak a stopped task.
+        task.destroy();
         tasks.delete(id);
     }
 }
