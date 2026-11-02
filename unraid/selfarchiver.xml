@@ -18,8 +18,8 @@
   <PostArgs/>
   <CPUset/>
   <DateInstalled/>
-  <DonateText/>
-  <DonateLink/>
+  <DonateText>EN: Like the project? Support it on Ko-fi ☕ — DE: Gefällt dir das Projekt? Unterstütze es auf Ko-fi ☕</DonateText>
+  <DonateLink>https://ko-fi.com/s3lfcod3r</DonateLink>
   <Description>Self-hosted email archiver: selective per-folder archiving, rule-based filters, per-rule schedules and archive-then-delete retention. Single container, SQLite-backed, no external services.</Description>
   <Networking>
     <Mode>bridge</Mode>
