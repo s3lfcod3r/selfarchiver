@@ -9,6 +9,7 @@ import { useTheme } from '../lib/theme.js';
 const APP_VERSION = 'v1.0';
 const WEBSITE_URL = 'https://selfcoder.de';
 const REPO_URL = 'https://github.com/s3lfcod3r/selfarchiver';
+const KOFI_URL = 'https://ko-fi.com/s3lfcod3r';
 
 const NAV: { to: string; key: string; icon: ReactNode }[] = [
     { to: '/', key: 'nav.overview', icon: <IconGrid /> },
@@ -52,6 +53,7 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
             {/* Mobile top bar */}
             <header className="flex items-center justify-between border-b border-line px-4 py-3 md:hidden">
                 <img src="/logo-wide.png" alt="SelfArchiver" className="h-8 w-auto" />
+                <KofiButton className="ml-auto mr-2" />
                 <button
                     type="button"
                     onClick={() => setMobileOpen((o) => !o)}
@@ -94,6 +96,9 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                         <a href={REPO_URL} target="_blank" rel="noreferrer" className="hover:text-accent">
                             GitHub
                         </a>
+                        <a href={KOFI_URL} target="_blank" rel="noreferrer" className="hover:text-accent">
+                            ☕ Ko-fi
+                        </a>
                     </div>
                     {authRequired && (
                         <button
@@ -117,7 +122,8 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                     {collapsed && <img src="/icon.png" alt="SelfArchiver" className="hidden h-8 w-8 md:block" />}
                 </div>
 
-                <div className={`hidden px-3 md:flex ${collapsed ? 'md:justify-center' : 'md:justify-end'}`}>
+                <div className={`hidden gap-2 px-3 md:flex ${collapsed ? 'md:flex-col md:items-center' : 'md:justify-end'}`}>
+                    <KofiButton />
                     <button
                         type="button"
                         onClick={toggleCollapsed}
@@ -160,6 +166,9 @@ export default function Layout({ authRequired }: { authRequired: boolean }) {
                         </a>
                         <a href={REPO_URL} target="_blank" rel="noreferrer" className="hover:text-accent">
                             GitHub
+                        </a>
+                        <a href={KOFI_URL} target="_blank" rel="noreferrer" className="hover:text-accent">
+                            ☕ Ko-fi
                         </a>
                     </div>
                     {authRequired && (
@@ -290,5 +299,21 @@ function IconLogout() {
                 strokeLinejoin="round"
             />
         </svg>
+    );
+}
+
+/** Small coffee button linking to Ko-fi (support the project). */
+function KofiButton({ className = '' }: { className?: string }) {
+    return (
+        <a
+            href={KOFI_URL}
+            target="_blank"
+            rel="noreferrer"
+            title="Ko-fi ☕ Unterstützen / Support"
+            aria-label="Ko-fi"
+            className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-line text-sm text-muted hover:border-accent/50 hover:text-ink ${className}`}
+        >
+            ☕
+        </a>
     );
 }
