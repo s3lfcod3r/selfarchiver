@@ -2,46 +2,30 @@
 <Container version="2">
   <Name>SelfArchiver</Name>
   <Repository>ghcr.io/s3lfcod3r/selfarchiver:latest</Repository>
-  <Registry>https://ghcr.io/s3lfcod3r/selfarchiver</Registry>
+  <Registry>https://github.com/s3lfcod3r/selfarchiver/pkgs/container/selfarchiver</Registry>
+  <Project>https://github.com/s3lfcod3r/selfarchiver</Project>
+  <Support>https://github.com/s3lfcod3r/selfarchiver/issues</Support>
+  <Overview>Self-hosted email archiver: pick exactly which IMAP folders to archive, build rules with filters (sender / subject / attachment / age), give each rule its own schedule, and optionally delete archived mail from the source mailbox to keep it small. Everything is stored in a single container (SQLite + full-text search + .eml files on disk). No external database required.</Overview>
+  <Category>Productivity: Backup: Tools:</Category>
+  <WebUI>http://[IP]:[PORT:3000]/</WebUI>
+  <TemplateURL>https://raw.githubusercontent.com/s3lfcod3r/unraid-templates/main/templates/selfarchiver.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/s3lfcod3r/selfarchiver/main/assets/icon.png</Icon>
   <Network>bridge</Network>
-  <MyIP/>
+  <ReadMe>https://raw.githubusercontent.com/s3lfcod3r/selfarchiver/main/README.md</ReadMe>
+  <License>Proprietary - free for private self-hosting, see project LICENSE</License>
+  <ExtraSearchTerms>mail email imap archive archiver backup eml retention sqlite</ExtraSearchTerms>
+  <Requires>Existing e-mail accounts with IMAP access. Set a UI password unless the instance runs in a trusted private network only.</Requires>
+  <ExtraParams>--restart=unless-stopped</ExtraParams>
   <Shell>sh</Shell>
   <Privileged>false</Privileged>
-  <Support/>
-  <Project>https://github.com/s3lfcod3r/selfarchiver</Project>
-  <Overview>Self-hosted email archiver with the features other archivers lack: pick exactly which IMAP folders to archive, build rules with filters (sender / subject / attachment / age), give each rule its own schedule, and optionally delete archived mail from the source mailbox to keep it small. Everything is stored in a single container (SQLite + full-text search + .eml files on disk). No external database required.</Overview>
-  <Category>Productivity: MailServer: Tools:</Category>
-  <WebUI>http://[IP]:[PORT:3000]/</WebUI>
-  <TemplateURL/>
-  <Icon>https://raw.githubusercontent.com/s3lfcod3r/selfarchiver/main/assets/icon.png</Icon>
-  <ExtraParams/>
-  <PostArgs/>
-  <CPUset/>
-  <DateInstalled/>
   <DonateText>EN: Like the project? Support it on Ko-fi ☕ — DE: Gefällt dir das Projekt? Unterstütze es auf Ko-fi ☕</DonateText>
   <DonateLink>https://ko-fi.com/s3lfcod3r</DonateLink>
-  <Description>Self-hosted email archiver: selective per-folder archiving, rule-based filters, per-rule schedules and archive-then-delete retention. Single container, SQLite-backed, no external services.</Description>
-  <Networking>
-    <Mode>bridge</Mode>
-    <Publish>
-      <Port>
-        <HostPort>3000</HostPort>
-        <ContainerPort>3000</ContainerPort>
-        <Protocol>tcp</Protocol>
-      </Port>
-    </Publish>
-  </Networking>
-  <Data>
-    <Volume>
-      <HostDir>/mnt/user/appdata/selfarchiver</HostDir>
-      <ContainerDir>/data</ContainerDir>
-      <Mode>rw</Mode>
-    </Volume>
-  </Data>
-  <Config Name="WebUI Port" Target="3000" Default="3000" Mode="tcp" Description="Web interface port" Type="Port" Display="always" Required="true" Mask="false">3000</Config>
-  <Config Name="Data" Target="/data" Default="/mnt/user/appdata/selfarchiver" Mode="rw" Description="SQLite database and the .eml archive" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/selfarchiver</Config>
-  <Config Name="APP_SECRET" Target="APP_SECRET" Default="" Mode="" Description="Stable secret for encrypting stored mailbox passwords and signing sessions. Generate with: openssl rand -hex 32. Keep it constant!" Type="Variable" Display="always" Required="false" Mask="true"/>
-  <Config Name="AUTH_PASSWORD" Target="AUTH_PASSWORD" Default="" Mode="" Description="Optional password to protect the web UI. Leave empty for an open instance on a trusted network." Type="Variable" Display="always" Required="false" Mask="true"/>
-  <Config Name="TZ" Target="TZ" Default="Europe/Berlin" Mode="" Description="Timezone used for per-rule cron schedules." Type="Variable" Display="always" Required="false" Mask="false">Europe/Berlin</Config>
-  <Config Name="LOG_LEVEL" Target="LOG_LEVEL" Default="info" Mode="" Description="Log verbosity: trace, debug, info, warn, error." Type="Variable" Display="advanced" Required="false" Mask="false">info</Config>
+  <Config Name="Data path" Target="/data" Default="/mnt/user/appdata/selfarchiver" Mode="rw" Description="SQLite database and the .eml archive. Grows with the archived mail - choose a share with enough space." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/selfarchiver</Config>
+  <Config Name="WebUI Port" Target="3000" Default="3000" Mode="tcp" Description="Port for the SelfArchiver web interface." Type="Port" Display="always" Required="true" Mask="false">3000</Config>
+  <Config Name="App Secret" Target="APP_SECRET" Default="" Mode="" Description="Stable secret for encrypting stored mailbox passwords and signing sessions. Generate with: openssl rand -hex 32. Keep it constant - changing it makes stored mailbox passwords unreadable. Empty = generated once and stored in the data folder." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="UI password" Target="AUTH_PASSWORD" Default="" Mode="" Description="Password protecting the web UI. Empty = open instance (trusted private network only)." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="Timezone" Target="TZ" Default="Europe/Berlin" Mode="" Description="Timezone used for the per-rule schedules." Type="Variable" Display="always" Required="false" Mask="false">Europe/Berlin</Config>
+  <Config Name="Cron timezone" Target="CRON_TZ" Default="Europe/Berlin" Mode="" Description="Timezone for evaluating the cron schedules. Normally the same as Timezone." Type="Variable" Display="advanced" Required="false" Mask="false">Europe/Berlin</Config>
+  <Config Name="Cookie secure" Target="COOKIE_SECURE" Default="false" Mode="" Description="Set to true when the UI is served over HTTPS only (reverse proxy), so the session cookie is sent over secure connections only." Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+  <Config Name="Log level" Target="LOG_LEVEL" Default="info" Mode="" Description="Log verbosity: trace, debug, info, warn, error." Type="Variable" Display="advanced" Required="false" Mask="false">info</Config>
 </Container>
