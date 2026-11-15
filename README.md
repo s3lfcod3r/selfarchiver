@@ -119,7 +119,8 @@ Open `http://<host>:3000` → add a mailbox → create a rule.
 ### 📦 Unraid
 
 Add the template from
-`https://raw.githubusercontent.com/s3lfcod3r/selfarchiver/main/unraid/selfarchiver.xml`
+`https://raw.githubusercontent.com/s3lfcod3r/unraid-templates/main/templates/selfarchiver.xml`
+(all my templates: [s3lfcod3r/unraid-templates](https://github.com/s3lfcod3r/unraid-templates))
 or import it under *Docker → Add Container → Template*. Set **APP_SECRET** and **AUTH_PASSWORD** and map `/data` to e.g. `/mnt/user/appdata/selfarchiver`.
 
 The image is published to GHCR: `ghcr.io/s3lfcod3r/selfarchiver:latest`.
@@ -317,7 +318,8 @@ docker compose up -d
 ### 📦 Unraid
 
 Vorlage von
-`https://raw.githubusercontent.com/s3lfcod3r/selfarchiver/main/unraid/selfarchiver.xml`
+`https://raw.githubusercontent.com/s3lfcod3r/unraid-templates/main/templates/selfarchiver.xml`
+(alle meine Vorlagen: [s3lfcod3r/unraid-templates](https://github.com/s3lfcod3r/unraid-templates))
 hinzufügen oder unter *Docker → Add Container → Template* importieren. **APP_SECRET** und **AUTH_PASSWORD** setzen und `/data` z. B. auf `/mnt/user/appdata/selfarchiver` mappen.
 
 Das Image liegt auf GHCR: `ghcr.io/s3lfcod3r/selfarchiver:latest`.
